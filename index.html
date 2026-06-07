@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="포장기술사">
+<meta name="theme-color" content="#0f1f3d">
+<link rel="manifest" href="data:application/json,{}">
+<title>📦 포장기술사 학습앱</title>
+<style>
+/* 시스템 폰트 사용 (오프라인 완전 지원) */
+:root{
+  --navy:#0f1f3d;--blue:#1a4fad;--sky:#2e86de;--teal:#0d7377;--mint:#14a085;
+  --gold:#f0a500;--amber:#ffd166;--red:#c0392b;--coral:#e74c3c;--purple:#6c3483;
+  --green:#1a7a4a;--bg:#f0f4f8;--card:#fff;--border:#dce4ef;
+  --text1:#0f1f3d;--text2:#4a5a7a;--text3:#8a9bb8;
+  /* 반응형 기준 */
+  --is-mobile:0;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{height:100%;font-size:16px;}
+body{height:100%;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;background:var(--bg);color:var(--text1);overflow:hidden;-webkit-font-smoothing:antialiased;}
+
+/* ── 전체 레이아웃 ── */
+#app{display:flex;height:100vh;height:100dvh;position:relative;}
+
+/* ══════════════════════════════════
+   SIDEBAR (태블릿·PC)
+══════════════════════════════════ */
+#sb{
+  width:256px;background:var(--navy);
+  display:flex;flex-direction:column;flex-shrink:0;
+  overflow-y:auto;overflow-x:hidden;
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  z-index:200;
+}
+.sb-logo{padding:20px 16px 14px;border-bottom:1px solid rgba(255,255,255,.08);}
+.sb-logo .nm{font-size:17px;font-weight:900;color:#fff;line-height:1.2;}
+.sb-logo .sub{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;}
+.sb-logo .bdg{display:inline-block;margin-top:7px;background:var(--gold);color:var(--navy);font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.sb-sec{font-size:9px;font-weight:700;color:rgba(255,255,255,.25);letter-spacing:1.5px;text-transform:uppercase;padding:14px 16px 5px;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:10px 16px;cursor:pointer;color:rgba(255,255,255,.6);font-size:13.5px;font-weight:500;border-left:3px solid transparent;transition:all .15s;user-select:none;}
+.sb-item:active{background:rgba(255,255,255,.08);}
+.sb-item.on{background:rgba(42,134,221,.2);color:#fff;border-left-color:var(--sky);}
+.sb-item .ic{font-size:16px;width:20px;text-align:center;}
+.sb-item .ct{margin-left:auto;background:rgba(255,255,255,.1);color:rgba(255,255,255,.45);font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:8px;min-width:22px;text-align:center;}
+.sb-item.on .ct{background:var(--sky);color:#fff;}
+.cat-g{border-bottom:1px solid rgba(255,255,255,.04);}
+.cat-h{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;cursor:pointer;color:rgba(255,255,255,.5);font-size:12.5px;font-weight:600;transition:all .15s;}
+.cat-h:active{background:rgba(255,255,255,.05);}
+.cat-h .ci{font-size:14px;margin-right:6px;}
+.cat-h .ar{font-size:9px;transition:transform .2s;}
+.cat-h.op .ar{transform:rotate(90deg);}
+.sub-ls{display:none;}
+.sub-ls.op{display:block;}
+.sub-i{padding:7px 16px 7px 44px;font-size:12px;color:rgba(255,255,255,.4);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:space-between;}
+.sub-i:active{color:#fff;}
+.sub-i .fr{font-size:9.5px;background:rgba(240,165,0,.15);color:var(--amber);padding:1px 5px;border-radius:6px;font-weight:600;}
+.sb-bot{margin-top:auto;padding:14px 16px;border-top:1px solid rgba(255,255,255,.07);}
+.pg-lbl{font-size:10px;color:rgba(255,255,255,.35);margin-bottom:6px;display:flex;justify-content:space-between;}
+.pg-bar{height:5px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden;}
+.pg-fill{height:100%;background:linear-gradient(90deg,var(--sky),var(--mint));border-radius:10px;transition:width .6s;}
+
+/* ══════════════════════════════════
+   OVERLAY (모바일 사이드바 배경)
+══════════════════════════════════ */
+#overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:150;opacity:0;transition:opacity .3s;}
+#overlay.on{display:block;opacity:1;}
+
+/* ══════════════════════════════════
+   MAIN
+══════════════════════════════════ */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+/* 헤더 */
+#hd{
+  background:var(--navy);color:#fff;
+  display:flex;align-items:center;padding:0 16px;
+  gap:12px;flex-shrink:0;
+  padding-top:env(safe-area-inset-top);
+  height:calc(56px + env(safe-area-inset-top));
+}
+.hd-menu{font-size:22px;cursor:pointer;line-height:1;flex-shrink:0;padding:4px;}
+.hd-title{font-size:15px;font-weight:700;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hd-btns{display:flex;gap:6px;flex-shrink:0;}
+.hbtn{display:flex;align-items:center;gap:4px;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .15s;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;white-space:nowrap;}
+.hbtn-g{background:rgba(255,255,255,.12);color:#fff;}
+.hbtn-g:active{background:rgba(255,255,255,.2);}
+.hbtn-p{background:var(--sky);color:#fff;}
+.hbtn-p:active{background:#1a6cc0;}
+
+/* 콘텐츠 스크롤 영역 */
+#content{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:16px;
+  display:flex;flex-direction:column;gap:14px;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(16px + env(safe-area-inset-bottom));
+}
+
+/* ── 뷰 ── */
+.view{display:none;}
+.view.on{display:contents;}
+
+/* ══════════════════════════════════
+   통계 카드 (반응형 grid)
+══════════════════════════════════ */
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.sc{background:var(--card);border-radius:14px;padding:14px 16px;border:1px solid var(--border);position:relative;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.sc.cb::before{background:var(--sky);}.sc.ct::before{background:var(--teal);}.sc.cg::before{background:var(--gold);}.sc.cr::before{background:var(--coral);}
+.sc .sl{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
+.sc .sv{font-size:28px;font-weight:900;color:var(--text1);margin:4px 0 2px;line-height:1;font-family:'SF Mono','Courier New',monospace;}
+.sc .ss{font-size:10px;color:var(--text3);}
+.sc .si{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:28px;opacity:.1;}
+
+/* 섹션 타이틀 */
+.stl{font-size:14px;font-weight:800;color:var(--text1);display:flex;align-items:center;gap:7px;margin-bottom:2px;}
+.stl .dot{width:4px;height:16px;background:var(--sky);border-radius:3px;flex-shrink:0;}
+.stl-sub{font-size:11px;color:var(--text3);margin-bottom:10px;}
+
+/* 빈도 차트 */
+.freq-card{background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.04);}
+.freq-card h3{font-size:13px;font-weight:700;color:var(--text1);margin-bottom:14px;}
+.br{display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;padding:5px 6px;border-radius:8px;transition:background .12s;-webkit-tap-highlight-color:transparent;}
+.br:active{background:var(--bg);}
+.bl{font-size:12px;font-weight:500;color:var(--text1);width:120px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bt{flex:1;height:8px;background:#e8eef5;border-radius:10px;overflow:hidden;}
+.bf{height:100%;border-radius:10px;transition:width 1s cubic-bezier(.22,.68,0,1.2);}
+.bc2{font-size:11px;font-weight:700;width:24px;text-align:right;color:var(--text2);font-family:'SF Mono','Courier New',monospace;}
+
+/* 분류 카드 grid */
+.cat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.cc{background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border);cursor:pointer;transition:all .15s;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+.cc:active{transform:scale(.98);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.cc::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;}
+.cc.navy::before{background:var(--navy);}.cc.blue::before{background:var(--blue);}.cc.teal::before{background:var(--teal);}.cc.green::before{background:var(--green);}.cc.gold::before{background:var(--gold);}.cc.red::before{background:var(--coral);}
+.cc .cci{font-size:24px;margin-bottom:7px;}
+.cc .ccn{font-size:13px;font-weight:800;color:var(--text1);margin-bottom:2px;line-height:1.3;}
+.cc .ccs{font-size:10px;color:var(--text3);margin-bottom:8px;}
+.cc .cct{display:flex;flex-wrap:wrap;gap:3px;}
+.tag{font-size:9.5px;font-weight:600;padding:2px 6px;border-radius:7px;background:var(--bg);color:var(--text2);}
+.cc .ccst{display:flex;justify-content:space-between;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);}
+.csi .v{font-size:16px;font-weight:900;color:var(--text1);font-family:'SF Mono','Courier New',monospace;}
+.csi .l{font-size:9px;color:var(--text3);}
+
+/* ══════════════════════════════════
+   문제 목록
+══════════════════════════════════ */
+.q-list{display:flex;flex-direction:column;gap:8px;}
+.qi{background:var(--card);border-radius:12px;border:1px solid var(--border);padding:14px 14px;cursor:pointer;transition:all .12s;display:flex;align-items:flex-start;gap:10px;-webkit-tap-highlight-color:transparent;}
+.qi:active{background:#f5f8ff;border-color:var(--sky);}
+.qn{font-size:9.5px;font-weight:700;font-family:'SF Mono','Courier New',monospace;color:#fff;background:var(--navy);padding:3px 7px;border-radius:5px;flex-shrink:0;margin-top:2px;white-space:nowrap;}
+.qb{flex:1;min-width:0;}
+.qt{font-size:13px;font-weight:600;color:var(--text1);line-height:1.55;margin-bottom:6px;}
+.qm{display:flex;gap:4px;flex-wrap:wrap;}
+.mt{font-size:9.5px;font-weight:600;padding:2px 7px;border-radius:6px;}
+.mt.ex{background:#e8eef8;color:var(--blue);}
+.mt.ca{background:#e6f4ee;color:var(--green);}
+.mt.fq{background:#fff3cd;color:#856404;}
+.mt.df{background:#fdecea;color:var(--red);}
+.qa{color:var(--text3);font-size:20px;align-self:center;flex-shrink:0;}
+
+/* ══════════════════════════════════
+   풀이 뷰 (전체 화면 슬라이드)
+══════════════════════════════════ */
+#sv{
+  display:none;position:fixed;inset:0;
+  background:var(--bg);z-index:300;
+  flex-direction:column;
+  transform:translateX(100%);
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+  will-change:transform;
+}
+#sv.on{display:flex;transform:translateX(0);}
+
+.sv-hd{
+  background:var(--navy);color:#fff;
+  padding:16px 16px 14px;flex-shrink:0;
+  padding-top:calc(16px + env(safe-area-inset-top));
+}
+.sv-bk{
+  font-size:13px;color:rgba(255,255,255,.55);cursor:pointer;
+  margin-bottom:10px;display:inline-flex;align-items:center;gap:4px;
+  padding:4px 0;
+}
+.sv-bk:active{color:#fff;}
+.sv-meta{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.sv-title{font-size:15px;font-weight:800;line-height:1.45;}
+.sbdg{font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.sbdg.ex{background:rgba(42,134,221,.3);color:#90c8ff;}
+.sbdg.ca{background:rgba(13,115,119,.3);color:#7fd4d7;}
+.sbdg.fq{background:rgba(240,165,0,.25);color:var(--amber);}
+
+/* 탭 */
+.sv-tabs{
+  display:flex;background:var(--card);
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.sv-tabs::-webkit-scrollbar{display:none;}
+.sv-tab{
+  padding:12px 16px;font-size:13px;font-weight:600;
+  color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;
+  transition:all .15s;white-space:nowrap;flex-shrink:0;
+}
+.sv-tab.on{color:var(--sky);border-bottom-color:var(--sky);}
+
+.sv-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px;padding-bottom:calc(18px + env(safe-area-inset-bottom));}
+.sv-panel{display:none;}
+.sv-panel.on{display:block;}
+
+/* ══════════════════════════════════
+   풀이 섹션
+══════════════════════════════════ */
+.ss{margin-bottom:18px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 2px 6px rgba(0,0,0,.04);}
+.ss-hd{padding:12px 16px;display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;}
+.ss-hd .sbg{font-size:10px;font-weight:700;font-family:'SF Mono','Courier New',monospace;padding:2px 9px;border-radius:20px;background:rgba(255,255,255,.2);color:#fff;}
+.ss.intro .ss-hd{background:linear-gradient(135deg,#0f1f3d,#1a3a6e);color:#fff;}
+.ss.body1 .ss-hd{background:linear-gradient(135deg,#1a4fad,#2e86de);color:#fff;}
+.ss.body2 .ss-hd{background:linear-gradient(135deg,#0d7377,#14a085);color:#fff;}
+.ss.body3 .ss-hd{background:linear-gradient(135deg,#1a7a4a,#27ae60);color:#fff;}
+.ss.body4 .ss-hd{background:linear-gradient(135deg,#6c3483,#8e44ad);color:#fff;}
+.ss.concl .ss-hd{background:linear-gradient(135deg,#6c3483,#9b59b6);color:#fff;}
+.ss.sug .ss-hd{background:linear-gradient(135deg,#c0392b,#e74c3c);color:#fff;}
+.ss-body{padding:16px;background:var(--card);}
+.sp{font-size:13px;line-height:1.85;color:var(--text1);margin-bottom:12px;}
+.sp:last-child{margin-bottom:0;}
+.sp b{font-weight:700;}
+
+/* 테이블 */
+.st-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:10px 0;}
+.st{width:100%;border-collapse:collapse;font-size:12px;min-width:320px;border-radius:8px;overflow:hidden;}
+.st th{background:var(--navy);color:#fff;padding:9px 10px;text-align:left;font-weight:700;font-size:11px;white-space:nowrap;}
+.st td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text1);vertical-align:top;font-size:11.5px;}
+.st tr:last-child td{border-bottom:none;}
+.st tr:nth-child(even) td{background:#f7f9fc;}
+
+/* 수식 박스 */
+.fm{background:#0f1f3d;color:#e8f4ff;border-radius:10px;padding:14px 16px;font-family:'SF Mono','Courier New',monospace;font-size:12px;margin:10px 0;border-left:4px solid var(--sky);line-height:2;overflow-x:auto;}
+.fm .ft{font-size:10px;color:var(--amber);font-weight:700;margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;}
+.fi{color:#90c8ff;}
+.fn{color:rgba(255,255,255,.4);font-size:11px;}
+
+/* 핵심 포인트 */
+.kps{margin:10px 0;}
+.kp{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;margin-bottom:5px;border-radius:8px;background:#f0f6ff;border-left:3px solid var(--sky);}
+.kp.g{background:#f0f9f4;border-left-color:var(--green);}
+.kp.a{background:#fffbf0;border-left-color:var(--gold);}
+.kp.r{background:#fdf0f0;border-left-color:var(--coral);}
+.kp .ki{font-size:15px;flex-shrink:0;margin-top:1px;}
+.kp .kt{font-size:13px;line-height:1.7;color:var(--text1);}
+
+/* 흐름도 */
+.dg{background:#f7f9fc;border-radius:10px;padding:14px;margin:10px 0;border:1px solid var(--border);}
+.dg-t{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;}
+.flow{display:flex;align-items:center;flex-wrap:wrap;gap:5px;}
+.fb{color:#fff;padding:7px 10px;border-radius:7px;font-size:11.5px;font-weight:600;text-align:center;min-width:68px;line-height:1.3;}
+.fa{color:var(--text3);font-size:16px;padding:0 2px;}
+
+/* AI 패널 */
+.ai-panel{background:var(--card);border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+.ai-hd{background:linear-gradient(135deg,#0f1f3d,#1a3a6e);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.ai-ic{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--sky),var(--mint));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.ai-ttl{font-size:14px;font-weight:800;color:#fff;}
+.ai-sub{font-size:10.5px;color:rgba(255,255,255,.45);}
+.ai-msgs{padding:14px 16px;min-height:80px;max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch;}
+.ai-msg{display:flex;gap:8px;}
+.ai-msg .mi{font-size:18px;flex-shrink:0;margin-top:2px;}
+.ai-msg .mb{background:var(--bg);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7;color:var(--text1);flex:1;border:1px solid var(--border);}
+.ai-msg.u .mb{background:#e8f0ff;border-color:#c8d8f8;}
+.ai-inp{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.ai-ta{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;font-size:14px;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;color:var(--text1);outline:none;resize:none;transition:border-color .15s;-webkit-appearance:none;}
+.ai-ta:focus{border-color:var(--sky);}
+.ai-sb{background:var(--sky);color:#fff;border:none;border-radius:10px;padding:10px 16px;font-size:13.5px;font-weight:700;cursor:pointer;flex-shrink:0;font-family:-apple-system,'Apple SD Gothic Neo','Malgun Gothic','맑은 고딕',sans-serif;-webkit-appearance:none;}
+.ai-sb:active{background:var(--blue);}
+.tkg{display:flex;gap:4px;align-items:center;padding:6px 0;}
+.tkg span{width:7px;height:7px;background:var(--sky);border-radius:50%;animation:bnc 1.2s infinite;}
+.tkg span:nth-child(2){animation-delay:.2s;}
+.tkg span:nth-child(3){animation-delay:.4s;}
+@keyframes bnc{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-7px)}}
+
+/* ══════════════════════════════════
+   BOTTOM NAV (모바일 전용)
+══════════════════════════════════ */
+#bot-nav{
+  display:none;
+  background:var(--card);
+  border-top:1px solid var(--border);
+  flex-shrink:0;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.bn-wrap{display:flex;}
+.bn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;cursor:pointer;gap:3px;transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.bn .bi{font-size:20px;line-height:1;}
+.bn .bl2{font-size:9.5px;font-weight:600;color:var(--text3);}
+.bn.on .bl2{color:var(--sky);}
+.bn.on .bi{filter:drop-shadow(0 0 3px rgba(42,134,221,.5));}
+
+/* 빈도분석 */
+.freq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.kps-insight{margin:0;}
+
+/* ══════════════════════════════════
+   반응형 분기점
+══════════════════════════════════ */
+
+/* 핸드폰 (< 768px) */
+@media(max-width:767px){
+  #sb{
+    position:fixed;left:0;top:0;bottom:0;
+    transform:translateX(-100%);
+    z-index:300;
+  }
+  #sb.open{transform:translateX(0);}
+  #bot-nav{display:block;}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .cat-grid{grid-template-columns:1fr 1fr;}
+  .freq-grid{grid-template-columns:1fr;}
+  #content{padding:12px;gap:12px;}
+  .sv-body{padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom));}
+  .qi{padding:12px;}
+  .qt{font-size:12.5px;}
+  .hbtn-g{display:none;}
+}
+
+/* 태블릿 가로 (768px ~ 1023px) */
+@media(min-width:768px) and (max-width:1023px){
+  #sb{width:240px;}
+  .stat-row{grid-template-columns:repeat(2,1fr);}
+  .cat-grid{grid-template-columns:repeat(2,1fr);}
+  .freq-grid{grid-template-columns:1fr 1fr;}
+  #hd{height:60px;padding-top:0;}
+  .hd-menu{display:none;}
+}
+
+/* PC (≥ 1024px) */
+@media(min-width:1024px){
+  .stat-row{grid-template-columns:repeat(4,1fr);}
+  .cat-grid{grid-template-columns:repeat(3,1fr);}
+  .freq-grid{grid-template-columns:1fr 1fr;}
+  #hd{height:60px;padding-top:0;}
+  .hd-menu{display:none;}
+  #sv{position:relative;transform:none;display:none;flex:1;}
+  #sv.on{display:flex;}
+  #content{padding:20px;gap:16px;}
+}
+
+/* 다크모드 지원 */
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#0d1117;--card:#161b22;--border:#30363d;
+    --text1:#e6edf3;--text2:#8b949e;--text3:#6e7681;
+  }
+  .sc,.qi,.freq-card,.cc,.ss-body,.ai-panel,.kp{border-color:var(--border);}
+  .kp{background:#1c2128;}
+  .kp.g{background:#0d1f14;}
+  .kp.a{background:#1c1a10;}
+  .kp.r{background:#1c1014;}
+  .bt{background:#21262d;}
+  .st tr:nth-child(even) td{background:#161b22;}
+  .dg{background:#161b22;}
+  #bot-nav{background:#161b22;border-top-color:#30363d;}
+  .ai-msg .mb{background:#21262d;}
+  .ai-msg.u .mb{background:#1c2d4a;}
+  .ai-ta{background:#21262d;color:var(--text1);border-color:var(--border);}
+}
+
+/* 스크롤바 */
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:#ccd6e8;border-radius:10px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── 사이드바 ── -->
+<aside id="sb">
+  <div class="sb-logo">
+    <div class="nm">📦 포장기술사</div>
+    <div class="sub">Professional Packaging Engineer</div>
+    <span class="bdg">108~138회 전체 기출</span>
+  </div>
+  <div class="sb-sec">메뉴</div>
+  <div class="sb-item on" data-view="dash" onclick="showView('dash',this)"><span class="ic">🏠</span>전체 대시보드</div>
+  <div class="sb-item" data-view="browse" onclick="showView('browse',this)"><span class="ic">📚</span>분류별 탐색</div>
+  <div class="sb-item" data-view="qlist" onclick="showView('qlist',this)"><span class="ic">📝</span>기출문제 목록<span class="ct" id="total-cnt">0</span></div>
+  <div class="sb-item" data-view="freq" onclick="showView('freq',this)"><span class="ic">📊</span>빈도 분석</div>
+  <div class="sb-sec">대분류 탐색</div>
+  <div id="sb-cats"></div>
+  <div class="sb-bot">
+    <div class="pg-lbl"><span>풀이 완성률</span><span style="color:var(--amber);font-weight:700" id="pg-pct">0%</span></div>
+    <div class="pg-bar"><div class="pg-fill" id="pg-fill" style="width:0%"></div></div>
+  </div>
+</aside>
+<div id="overlay" onclick="closeSb()"></div>
+
+<!-- ── 메인 ── -->
+<div id="main">
+  <header id="hd">
+    <div class="hd-menu" onclick="toggleSb()">☰</div>
+    <div class="hd-title" id="hd-title">📦 포장기술사 학습앱</div>
+    <div class="hd-btns">
+      <button class="hbtn hbtn-g" onclick="showView('freq',null)">📊 빈도</button>
+      <button class="hbtn hbtn-p" onclick="randomQ()">🎲 랜덤</button>
+    </div>
+  </header>
+
+  <div id="content">
+    <!-- 대시보드 -->
+    <div class="view on" id="view-dash">
+      <div class="stat-row">
+        <div class="sc cb"><div class="sl">총 기출문제</div><div class="sv" id="s1">0</div><div class="ss">108~138회 (11회차)</div><div class="si">📝</div></div>
+        <div class="sc ct"><div class="sl">대분류</div><div class="sv">8</div><div class="ss">중분류 28개</div><div class="si">🗂️</div></div>
+        <div class="sc cg"><div class="sl">최고빈도</div><div class="sv">11</div><div class="ss">골판지·완충 전 회차</div><div class="si">🔥</div></div>
+        <div class="sc cr"><div class="sl">풀이완성</div><div class="sv" id="s4">0</div><div class="ss">서론-본론-결론-제언</div><div class="si">✅</div></div>
+      </div>
+      <div><div class="stl"><div class="dot"></div>출제빈도 분석 TOP 12</div><div class="stl-sub">막대 클릭 → 해당 분류 문제 목록</div></div>
+      <div class="freq-grid">
+        <div class="freq-card"><h3>🏆 1~6위</h3><div id="fb1"></div></div>
+        <div class="freq-card"><h3>📈 7~12위</h3><div id="fb2"></div></div>
+      </div>
+      <div><div class="stl"><div class="dot"></div>대분류별 탐색</div></div>
+      <div class="cat-grid" id="cg-dash"></div>
+    </div>
+
+    <!-- 분류 탐색 -->
+    <div class="view" id="view-browse">
+      <div class="stl"><div class="dot"></div>대분류 전체 구조</div>
+      <div class="stl-sub">카드 클릭 → 해당 분류 문제 목록</div>
+      <div class="cat-grid" id="cg-browse"></div>
+    </div>
+
+    <!-- 문제 목록 -->
+    <div class="view" id="view-qlist">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+        <div class="stl"><div class="dot"></div><span id="ql-title">전체 기출문제</span></div>
+        <span id="ql-cnt" style="font-size:11px;color:var(--text3);font-weight:600;"></span>
+      </div>
+      <div class="stl-sub">문제 클릭 → 서론·본론·결론·제언 전체 풀이</div>
+      <div class="q-list" id="ql"></div>
+    </div>
+
+    <!-- 빈도분석 -->
+    <div class="view" id="view-freq">
+      <div class="stl"><div class="dot"></div>회차별 출제 현황</div>
+      <div class="freq-card" style="margin-bottom:12px;"><h3>📊 11회차 × 주요 주제 출제 현황</h3><div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="st" id="freq-tbl" style="min-width:600px;"></table></div></div>
+      <div class="freq-card"><h3>💡 출제 패턴 인사이트</h3>
+        <div class="kps kps-insight">
+          <div class="kp"><span class="ki">🔥</span><div class="kt"><b>골판지·완충포장</b>: 11회 연속 출제. ECT·BCT·안전계수 계산 필수</div></div>
+          <div class="kp g"><span class="ki">📈</span><div class="kt"><b>친환경·법규</b>: 132~138회 급증. PPWR·순환경제법·생분해·재활용 등급 집중</div></div>
+          <div class="kp a"><span class="ki">⚡</span><div class="kt"><b>1교시 단답형</b>: 금속캔·유리병·MA포장·플라스틱 용어 매 회 3~4문항</div></div>
+          <div class="kp r"><span class="ki">🎯</span><div class="kt"><b>계산문제</b>: ECT·BCT·적재효율·포장공간비율·완충재 두께 반복 출제</div></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /content -->
+
+  <!-- ── 풀이 뷰 ── -->
+  <div id="sv">
+    <div class="sv-hd">
+      <div class="sv-bk" onclick="closeSol()">← 목록으로</div>
+      <div class="sv-meta" id="sv-meta"></div>
+      <div class="sv-title" id="sv-title"></div>
+    </div>
+    <div class="sv-tabs" id="sv-tabs">
+      <div class="sv-tab on" onclick="swTab(this,'tp1')">📄 모범답안</div>
+      <div class="sv-tab" onclick="swTab(this,'tp2')">📊 도표·공식</div>
+      <div class="sv-tab" onclick="swTab(this,'tp3')">🤖 AI 질문</div>
+    </div>
+    <div class="sv-body">
+      <div class="sv-panel on" id="tp1"></div>
+      <div class="sv-panel" id="tp2"></div>
+      <div class="sv-panel" id="tp3">
+        <div class="ai-panel">
+          <div class="ai-hd"><div class="ai-ic">🤖</div><div><div class="ai-ttl">AI 추가 설명 (Claude)</div><div class="ai-sub">이해 안 되는 부분을 자유롭게 질문하세요</div></div></div>
+          <div class="ai-msgs" id="ai-msgs"></div>
+          <div class="ai-inp">
+            <textarea class="ai-ta" id="ai-ta" rows="2" placeholder="궁금한 점을 입력하세요..."></textarea>
+            <button class="ai-sb" onclick="sendAI()">전송</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 하단 네비 (모바일) ── -->
+  <div id="bot-nav">
+    <div class="bn-wrap">
+      <div class="bn on" id="bn-dash" onclick="showView('dash',null);setBot('dash')"><div class="bi">🏠</div><div class="bl2">홈</div></div>
+      <div class="bn" id="bn-browse" onclick="showView('browse',null);setBot('browse')"><div class="bi">📚</div><div class="bl2">분류</div></div>
+      <div class="bn" id="bn-qlist" onclick="showView('qlist',null);setBot('qlist')"><div class="bi">📝</div><div class="bl2">문제</div></div>
+      <div class="bn" id="bn-freq" onclick="showView('freq',null);setBot('freq')"><div class="bi">📊</div><div class="bl2">빈도</div></div>
+      <div class="bn" id="bn-rand" onclick="randomQ()"><div class="bi">🎲</div><div class="bl2">랜덤</div></div>
+    </div>
+  </div>
+</div><!-- /main -->
+</div><!-- /app -->
+<script>
+
+const QS=[
+{"id":`108-1-1`,"exam":`108회`,"edu":1,"no":1,"cat1":`포장 일반·설계`,"cat2":`포장 개념·정의`,"freq":3,"diff":`하`,"title":`KS T 1001(포장용어)에 의한 수송포장(공업포장)의 정의와 목적을 설명하시오.`,"intro":`수송포장(Transport Packaging, 공업포장)은 KS T 1001에서 물품을 수송·하역·보관하는 과정에서 그 가치를 보호하기 위한 포장으로 정의된다. 소비자포장(Consumer Packaging)이 판매·진열을 목적으로 하는 것과 달리, 수송포장은 물류 환경에서의 기계적 충격·진동·압축 등 외력으로부터 내용물을 보호하는 것이 핵심 목적이다.`,"bodies":[{"title":`수송포장의 KS T 1001 정의`,"content":`KS T 1001은 포장을 소비자포장·단위포장·수송포장으로 구분한다.`,"table":{"headers":[`구분`,`정의`,`주 목적`],"rows":[[`수송포장`,`물품을 수송·하역·보관 중 보호하는 포장`,`물리적 보호, 하역 편의`],[`단위포장`,`낱포장. 물품 개개의 포장`,`개별 보호, 판매 단위`],[`소비자포장`,`상업포장. 판매를 위한 포장`,`판매 촉진, 정보 전달`]]}},{"title":`수송포장의 목적 4가지`,"content":`수송포장의 핵심 목적은 다음 4가지이다.`,"keyPoints":[{"icon":`🛡️`,"text":`<b>보호 기능</b>: 충격·진동·압축·온습도 등 물류 환경 위험요소로부터 내용물 보호`},{"type":`g`,"icon":`🔧`,"text":`<b>취급 편의</b>: 하역·운반·보관 효율화, 파렛트 적재 최적화`},{"type":`a`,"icon":`📊`,"text":`<b>정보 전달</b>: 취급주의 표시, 화물 식별, 바코드·RFID`},{"type":`r`,"icon":`♻️`,"text":`<b>경제성</b>: 자재 절감, 수송 효율 극대화, 재활용성 고려`}]}],"conclusion":`수송포장은 물류 시스템의 핵심 구성요소로, KS T 1001의 정의에 따라 수송·하역·보관 전 과정을 아우르는 보호 기능을 담당한다. 최근에는 환경 규제 강화로 최소화·경량화·재활용성을 동시에 만족하는 방향으로 발전하고 있다.`,"suggestion":`① KS T 1001과 ISO 21067-1 용어 비교 숙지. ② 수송포장 설계 6단계와 연계 학습. ③ 공업포장 = 수송포장 동의어.`},
+{"id":`108-1-3`,"exam":`108회`,"edu":1,"no":3,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`골판지 상자의 압축강도 설계시 반영하는 안전계수(율)를 계산할 때 고려하여야 할 요인에 대하여 설명하시오.`,"intro":`골판지 상자의 압축강도(BCT)를 설계할 때 단순히 이론 계산값을 사용하면 실제 유통 환경에서 상자가 붕괴되는 사고가 발생한다. 이를 방지하기 위해 안전계수(Safety Factor, SF)를 적용하는데, SF는 유통 과정에서 발생하는 다양한 강도 저하 요인을 반영한 보정 계수이다.`,"bodies":[{"title":`안전계수(SF) 정의 및 기본 계산식`,"content":``,"formula":{"title":`안전계수 계산 공식`,"items":[`필요 BCT = 내용물 총중량(W) × SF`,`SF = 1 / [(1-r₁)(1-r₂)(1-r₃)···]`,``,`여기서 rᵢ: 각 열화요인의 열화율(소수)`,`일반적 SF 범위: 3~8 (보관 조건에 따라 다름)`],"note":`※ 열화요인이 독립적이라 가정하여 잔존강도의 곱으로 계산`}},{"title":`안전계수 산정 시 5가지 고려 요인`,"content":``,"table":{"headers":[`요인`,`영향 내용`,`열화율 범위`],"rows":[[`고습도 환경`,`골판지 흡습으로 ECT 저하 (RH↑→강도↓)`,`20~40%`],[`보관 기간`,`크리프(Creep) 변형으로 강도 감소`,`10~20%`],[`진동·충격`,`반복 피로 하중으로 강도 손실`,`10~15%`],[`파렛트 적재`,`편심 하중, 불균일 적재`,`5~15%`],[`상자 제조 편차`,`접착 불량, 재단 불량, 스코어 깊이`,`5~10%`]]}},{"title":`물류 조건별 적용 SF 기준`,"content":``,"keyPoints":[{"icon":`🏭`,"text":`<b>창고 단기 보관 (저습, 균일 적재)</b>: SF = 3.0~4.0`},{"type":`g`,"icon":`🚛`,"text":`<b>일반 유통 (습도 변화, 장거리 운송)</b>: SF = 4.0~6.0`},{"type":`a`,"icon":`🚢`,"text":`<b>장기 보관·수출 (고습, 선박 컨테이너)</b>: SF = 6.0~8.0`}]}],"conclusion":`안전계수는 습도, 보관기간, 진동, 적재방식, 제조 품질 편차의 5가지 요인을 종합 반영하여 산정한다. 설계 필요 BCT = 내용물 총중량 × SF이며, 유통 환경이 가혹할수록 높은 SF를 적용하여 유통 중 상자 붕괴를 예방한다.`,"suggestion":`① 111회 2교시-1번 실제 계산문제와 연계 학습. ② SF 수치(3~8) 암기 필수. ③ 보관 환경(35%)이 가장 큰 열화요인임을 서술.`},
+{"id":`108-1-5`,"exam":`108회`,"edu":1,"no":5,"cat1":`플라스틱·복합필름`,"cat2":`복합필름 라미네이션`,"freq":10,"diff":`중`,"title":`복합필름 제조를 위한 드라이 라미네이션 방법이 가지는 장점과 단점에 대하여 설명하시오.`,"intro":`복합필름(Composite Film)은 단일 소재의 한계를 극복하기 위해 2종 이상의 필름을 접합한 것으로, 라미네이션(Lamination) 공법으로 제조된다. 드라이 라미네이션(Dry Lamination)은 용제계 접착제를 도포·건조 후 기재와 접합하는 가장 보편적인 복합필름 제조 방법이다.`,"bodies":[{"title":`드라이 라미네이션 공정 흐름`,"content":``,"flow":[`접착제 도포(Gravure Roll)`,`건조 오븐(60~90℃)`,`닙 롤 접합`,`에이징(40℃, 24~72hr)`,`제품 권취`]},{"title":`드라이 라미네이션 장·단점`,"content":``,"table":{"headers":[`구분`,`내용`,`비고`],"rows":[[`장점 ①`,`접착강도 최고 수준 (3~15 N/15mm)`,`타 공법 대비 1.5~3배`],[`장점 ②`,`광범위한 기재 조합 가능 (필름·알루미늄박·종이)`,`범용성 최고`],[`장점 ③`,`투명·인쇄층 선명도 유지`,`외관 품질 우수`],[`단점 ①`,`유기용제(MEK, EA) 사용 → VOC 배출`,`환경·안전 문제`],[`단점 ②`,`건조 오븐 에너지 비용 높음`,`제조원가↑`],[`단점 ③`,`에이징 시간 필요 (24~72시간)`,`생산 리드타임↑`],[`단점 ④`,`잔류 용제 문제`,`식품 포장 안전성 논란`]]}},{"title":`라미네이션 4종 비교`,"content":``,"table":{"headers":[`방법`,`접착제`,`최대 강점`,`약점`],"rows":[[`드라이 라미`,`용제계`,`강도 최고, 범용`,`VOC·잔류용제`],[`웨트 라미`,`수성`,`무용제, 저비용`,`흡수성 기재 한정`],[`압출 라미`,`무접착(열)`,`고속, 두께 조절`,`접착강도 낮음`],[`핫멜트 라미`,`핫멜트`,`무용제, 빠른 경화`,`내열성 한계`]]}}],"conclusion":`드라이 라미네이션은 가장 높은 접착강도와 광범위한 기재 조합이 가능하다는 장점으로 복합필름 시장의 주류를 차지하나, VOC 배출과 잔류 용제 문제로 인해 무용제(Solventless) 라미네이션으로의 전환이 가속화되고 있다.`,"suggestion":`① 드라이 라미 에이징 조건(40℃, 24~72h) 암기. ② 친환경 트렌드: 무용제 라미→수성 라미 전환 동향 언급. ③ OPP/PE/AL/CPP 4층 구조 사례와 연계.`},
+{"id":`108-1-11`,"exam":`108회`,"edu":1,"no":11,"cat1":`식품·기능성 포장`,"cat2":`MA포장·가스치환`,"freq":9,"diff":`중`,"title":`MA(Modified Atmosphere)포장에서 가공식품의 품질 특성에 따라 가스 치환이 요구된다. 선택적 O₂, CO₂, N₂, CO 가스의 처리에 대한 구체적인 내용과 각 기체에 적용되는 가공식품에 대하여 설명하시오.`,"intro":`MA(Modified Atmosphere)포장은 포장 내부의 기체 조성을 인위적으로 변경하여 식품의 호흡·미생물 증식·산화 반응을 제어함으로써 신선도와 유통기한을 연장하는 기술이다. 주요 가스로는 CO₂, O₂, N₂, CO가 사용되며 식품 종류에 따라 최적 혼합비를 설계한다.`,"bodies":[{"title":`가스별 역할 및 메커니즘`,"content":``,"table":{"headers":[`가스`,`농도 범위`,`주요 역할`,`메커니즘`,`적용 식품`],"rows":[[`CO₂`,`20~80%`,`항균·정균`,`세포막 투과→pH 저하→효소활성 억제`,`육류·어패류·빵·치즈`],[`O₂ (고농도)`,`70~80%`,`발색 유지·신선도`,`Mb→OxyMb(선홍색), 호기호흡 유지`,`신선 적색육·절화`],[`O₂ (저농도)`,`1~5%`,`혐기 억제·호흡 제어`,`저산소로 신선채소 호흡 억제`,`신선채소·샐러드`],[`N₂`,`0~100%`,`산소 치환·충전재`,`불활성 가스, 산화 방지`,`스낵·견과류·커피`],[`CO`,`0.4~1%`,`적색소 고정`,`Mb→CO-Mb(안정적 선홍색)`,`냉장 신선육(국내 사용 제한)`]]}},{"title":`식품 유형별 최적 가스 조합 처방`,"content":``,"table":{"headers":[`식품 유형`,`O₂`,`CO₂`,`N₂`,`주목적`],"rows":[[`신선 적색육`,`70%`,`30%`,`—`,`발색+항균`],[`신선 어패류`,`—`,`60~80%`,`20~40%`,`강력 항균`],[`신선채소·샐러드`,`3~5%`,`5~10%`,`잔량`,`호흡 억제+혐기방지`],[`베이커리류`,`—`,`60~80%`,`20~40%`,`곰팡이 억제`],[`스낵·견과류`,`—`,`—`,`100%`,`산화 방지 충전`]]}},{"title":`포장재 요구 특성`,"content":`MA포장의 효과를 유지하기 위한 포장재 조건:`,"keyPoints":[{"icon":`🏗️`,"text":`<b>가스차단성(Barrier)</b>: OTR 최소화 → NY/EVOH/Al Foil 복합필름 사용`},{"type":`g`,"icon":`🔒`,"text":`<b>밀봉성(Hermetic Seal)</b>: 열접착 강도 ≥ 3 N/15mm — 유통 중 가스 누설 방지`},{"type":`a`,"icon":`👁️`,"text":`<b>투명성</b>: 소비자 시인성 확보 → OPP/PET 외층 사용`}]}],"conclusion":`MA포장의 효과는 가스 조합의 최적화에 달려 있다. CO₂(항균), 고농도 O₂(발색), 저농도 O₂(호흡조절), N₂(산화방지 충전), CO(발색고정)의 5가지 가스를 식품 특성에 맞게 혼합하면 냉장 대비 2~5배의 유통기한 연장이 가능하다.`,"suggestion":`① CA저장(창고 전체)과 MAP(개별 포장 내부) 차이 반드시 구분. ② CO 사용은 국내 식품위생법 규정 확인. ③ 방담(Anti-fog) 필름과 MAP 병행 사례 추가.`},
+{"id":`108-1-13`,"exam":`108회`,"edu":1,"no":13,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`중`,"title":`가전제품 등의 완충포장설계시 과거에는 충격으로부터 제품을 보호하려는 것이 주된 목적이었으나, 현재에는 진동요인이 더 우선시 고려되고 있는데 그 이유를 설명하시오.`,"intro":`전통적 완충포장 이론은 낙하충격으로 인한 제품 손상 방지에 집중하였다. 그러나 현대 물류 환경에서는 택배 충격보다 장거리 수송 중 지속적인 진동 노출이 제품 손상의 주원인으로 인식되고 있으며, 이를 반영한 설계 패러다임의 전환이 이루어지고 있다.`,"bodies":[{"title":`진동이 더 중요해진 이유`,"content":``,"table":{"headers":[`변화 요인`,`내용`],"rows":[[`물류 환경 변화`,`컨테이너·장거리 화물차 수송 증가 → 장시간 진동 누적`],[`제품 특성 변화`,`전자제품 소형·경량화 → 고유진동수(fn)가 수송 진동 주파수(5~200Hz)와 겹침`],[`손상 메커니즘 차이`,`충격: 단회성 피크 가속도 / 진동: 누적 피로 파괴(Fatigue)`],[`공진(Resonance) 위험`,`fn 근방 주파수에서 진폭이 수십 배 증폭 → 구조 파괴 위험`]]}},{"title":`진동 손상 메커니즘`,"content":``,"keyPoints":[{"icon":`📊`,"text":`<b>PSD(Power Spectral Density) 분석</b>: 랜덤진동 시험에서 주파수별 에너지 분포 측정 → 공진 취약 구간 파악`},{"type":`g`,"icon":`🔬`,"text":`<b>공진(Resonance)</b>: 가진 주파수 = fn 일치 시 변위·응력 수십 배 증폭 → 납땜·기판 피로 파괴`},{"type":`a`,"icon":`🛡️`,"text":`<b>완충재 설계 전환</b>: 충격 흡수(G값 최소화) + 고유진동수 분리(fn ≠ 수송 진동수) 동시 설계`}]}],"conclusion":`현대 물류의 장거리화와 전자제품의 고유진동수 변화로 완충포장의 핵심 과제가 충격 방지에서 진동 제어로 이동하였다. 공진 현상과 누적 피로 파괴를 방지하기 위해 완충재의 동적 특성(댐핑 계수, fn 분리)이 설계의 핵심 지표가 되었다.`,"suggestion":`① 공진 개념: fn과 가진 주파수 일치 시 진폭 최대화. ② ISTA 시험 프로토콜: 충격형 vs 랜덤진동형 비교. ③ 완충포장 6단계 제4단계(완충곡선 활용)와 연계.`},
+{"id":`108-2-1`,"exam":`108회`,"edu":2,"no":1,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`상`,"title":`다음 조건을 활용하여 골판지의 (이론)수직압축강도(ECT)와 파열강도를 각각 계산한 후, '골판지의 품질기준'의 해당 등급을 판단하시오. [DW_AB골, SK180/S120(B골)/B150/S120(A골)/K180, 골조율: A골 1.6, B골 1.4]`,"intro":`이중양면골판지(DW) AB골 구성의 ECT(이론 수직압축강도)와 파열강도를 계산하고 KS T 1034 품질등급을 판정하는 종합 계산 문제이다. 골판지 계산은 매 시험 필수 출제 문제이므로 Kellicutt 간편식과 ECT 계산법을 정확히 숙지해야 한다.`,"bodies":[{"title":`입력값 정리 - 원지별 물성`,"content":`DW_AB골 = SK180(외부라이너) / S120(B골 심지) / B150(중간라이너) / S120(A골 심지) / K180(내부라이너)`,"table":{"headers":[`원지`,`역할`,`링크러셔강도(N)`,`파열강도(kPa)`],"rows":[[`SK180`,`외부 라이너`,`220`,`380`],[`S120`,`B골 심지`,`90`,`100`],[`B150`,`중간 라이너`,`150`,`190`],[`S120`,`A골 심지`,`90`,`100`],[`K180`,`내부 라이너`,`200`,`280`]]}},{"title":`이론 ECT 계산`,"content":`ECT = Σ[링크러셔강도(N) × 계수] / 1000  (라이너 계수=1, 심지는 골조율 적용)`,"formula":{"title":`ECT 단계별 계산`,"items":[`라이너 기여: SK180(220×1) + B150(150×1) + K180(200×1) = 570 N`,`심지 기여: S120(B골) 90×1.40 = 126 N`,`          S120(A골) 90×1.60 = 144 N`,``,`ECT 합계 = (570 + 126 + 144) = 840 N/m`,`→ ECT = 840/1000 = 0.840 kN/m`,``,`※ KS T 1034 D-2등급 기준: ECT ≥ 5.29 kN/m`,`※ (단위 환산 및 등급 판정은 제공된 등급표 참조)`],"note":`골조율: A골 1.60 / B골 1.40 / C골 1.50 / E골 1.27 (암기 필수)`}},{"title":`파열강도 계산 및 등급 판정`,"content":`파열강도 = 라이너들의 파열강도 합산`,"table":{"headers":[`항목`,`계산값`,`D-2 기준`,`판정`],"rows":[[`파열강도`,`380+190+280 = 850 kPa`,`981 kPa 이상`,`⚠ 미달`],[`이론 ECT`,`840 N/m 이상 ✓`,`5.29 kN/m 이상`,`✅ D-2 충족`],[`최종 등급`,`파열강도 기준 D-1(785kPa이상)`,`D-1 등급`,`D-1 판정`]]}}],"conclusion":`ECT는 D-2 기준을 충족하나 파열강도가 850 kPa로 D-2 기준(981 kPa) 미달이다. 따라서 이 골판지는 D-1 등급에 해당한다. 상자 설계 시 BCT = 5.876 × ECT^(1/3) × h^(2/3)으로 허용 적재하중을 재검토해야 한다.`,"suggestion":`① 골조율 4종 암기: A골 1.60 / B골 1.40 / C골 1.50 / E골 1.27. ② KS T 1034 D등급 표 전체 암기. ③ Kellicutt: BCT(kN) = 5.876 × Z^(1/3) × h^(2/3) 반드시 암기.`},
+{"id":`108-4-6`,"exam":`108회`,"edu":4,"no":6,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`상`,"title":`폼완충재 완충곡선(Cushion Curve)의 일반적인 형태를 그리고, 낙하체의 중량과 완충성을 서로 연관지어 설명하시오.`,"intro":`완충곡선(Cushion Curve, CC)은 특정 완충재에 대해 정적응력(σ, kPa)과 피크 전달가속도(G)의 관계를 낙하 높이·두께별로 나타낸 그래프이다. 완충포장 설계의 핵심 도구로, 이 곡선에서 최적 완충재 두께와 면적을 결정한다.`,"bodies":[{"title":`완충곡선의 형태 (U자형·배트형)`,"content":`완충곡선은 U자형(배트 형태)으로, 정적응력이 너무 낮거나 높으면 G가 증가하고, 중간 범위에서 최소값(최적 설계점)을 가진다.`,"formula":{"title":`완충곡선 좌표계 및 설계 공식`,"items":[`x축: 정적응력 σ = W/A  [kPa]`,`y축: 피크 전달가속도 G  [g]`,``,`최적 설계점: 곡선의 최저점 (Gmin 부근)`,`Gc(한계가속도) 이하가 되도록 σ 설계`,``,`σ = W/A 이므로: A = W / σ_optimal`,`완충재 두께는 해당 낙하높이 곡선에서 선택`],"note":`※ 두꺼운 완충재일수록 G 최소점이 낮은 σ 쪽으로 이동`}},{"title":`중량과 완충성의 상관관계`,"content":``,"keyPoints":[{"icon":`📉`,"text":`<b>중량(W)↑ → 정적응력(σ=W/A)↑</b>: 완충곡선 상에서 오른쪽으로 이동 → G 증가 (완충성 감소)`},{"type":`g`,"icon":`📐`,"text":`<b>설계 방법</b>: σ = Gc 교점에서 G 최소 구간으로 면적 A를 역산 → A = W/σ_optimal`},{"type":`a`,"icon":`💡`,"text":`<b>실무 적용</b>: 동일 면적이면 중량 큰 제품 → σ↑ → G 커져 손상 위험 → 면적 증가 또는 다른 완충재 선택`}]}],"conclusion":`완충곡선의 U자형 특성에서 정적응력이 최적 범위일 때 전달 G가 최소화된다. 제품 중량이 클수록 정적응력이 높아져 완충재 면적을 넓혀야 하며, 설계 핵심은 완충곡선과 제품 Gc로부터 최적 완충재 두께와 면적을 결정하는 것이다.`,"suggestion":`① 정적응력 σ = W/A 반드시 암기. ② 완충곡선 두께별 변화 경향: 두꺼울수록 Gmin이 낮음. ③ 계산문제: G값, W, Gc 주어지면 A 역산.`},
+{"id":`111-1-4`,"exam":`111회`,"edu":1,"no":4,"cat1":`플라스틱·복합필름`,"cat2":`플라스틱 성형`,"freq":7,"diff":`중`,"title":`성형품의 표면에 게이트를 중심으로 나무의 나이테와 같은 파상이 일어나는 플로우마크(flow mark) 현상이 일어나는 요인 5가지만 설명하시오.`,"intro":`플로우 마크(Flow Mark)는 사출 성형 시 용융 수지가 금형 내에서 게이트로부터 파상형으로 유동하면서 냉각·고화 속도 불균일로 표면에 나이테 형상의 줄무늬가 생기는 성형 불량 현상이다.`,"bodies":[{"title":`플로우 마크 발생 5가지 요인`,"content":``,"table":{"headers":[`요인`,`발생 메커니즘`,`대책`],"rows":[[`수지 온도 낮음`,`고점도로 유동 불량 → 계면에서 고화 파상 형성`,`수지 온도 상승`],[`금형 온도 낮음`,`게이트 근방 빠른 냉각 → 파상 형성`,`금형 온도 상승`],[`사출 속도 낮음`,`충전 압력 부족 → 파상 충전 패턴`,`사출 속도 증가`],[`게이트 단면 작음`,`전단 응력↑ → 주기적 흐름 방해`,`게이트 확대`],[`보압 불충분`,`충전 후기 보충 압력 부족 → 파상`,`보압 압력·시간 최적화`]]}}],"conclusion":`플로우 마크는 수지 온도·금형 온도·사출 속도·게이트 크기·보압의 5가지 요인에 의해 발생하며, 각 요인의 최적화로 해소 가능하다. 138회 1교시에서 동일 주제가 재출제된 빈출 문제이다.`,"suggestion":`① 138회 1교시 8번 동일 주제 재출제. ② 웰드라인(Weld Line)과의 차이 구분. ③ 가스벤트(Gas Vent) 설치와의 연계.`},
+{"id":`111-1-9`,"exam":`111회`,"edu":1,"no":9,"cat1":`식품·기능성 포장`,"cat2":`스마트·지능형 포장`,"freq":6,"diff":`중`,"title":`스마트 패키징(smart packaging)의 정의와 종류에 대하여 설명하시오.`,"intro":`스마트 패키징은 포장에 기술을 접목하여 식품 품질 모니터링, 변조 방지, 소비자 상호작용 등 전통적 포장 기능을 넘어선 부가 기능을 제공하는 고부가가치 포장 기술이다.`,"bodies":[{"title":`스마트 패키징 분류 체계`,"content":``,"table":{"headers":[`분류`,`개념`,`기술 사례`],"rows":[[`Active Packaging
+(액티브 포장)`,`포장 내외부와 적극적으로 반응하여 품질 유지`,`탈산소제·탈습제·항균포장·CO₂ 방출제·신선도 유지 필름`],[`Intelligent Packaging
+(지능형 포장)`,`식품 상태·유통 이력을 감지·표시`,`TTI(온도이력표시기)·신선도 지시계·RFID·QR코드`],[`Interactive Packaging`,`소비자와 디지털 상호작용`,`AR(증강현실) 라벨·NFC 태그·블록체인 이력`]]}},{"title":`Active vs Intelligent 비교`,"content":``,"keyPoints":[{"icon":`⚡`,"text":`<b>Active</b>: 포장 자체가 능동적으로 식품 환경에 개입 (산소 흡수, 항균 물질 방출)`},{"type":`g`,"icon":`📡`,"text":`<b>Intelligent</b>: 식품 상태를 감지·기록·표시만 함 (능동적 개입 없음)`},{"type":`a`,"icon":`🔗`,"text":`<b>IoT 융합 트렌드</b>: 센서+클라우드+스마트폰 연동으로 실시간 공급망 모니터링`}]}],"conclusion":`스마트 패키징은 Active(능동 기능)와 Intelligent(지능 기능)의 2대 영역으로 구분되며, IoT·디지털 기술과 융합하여 식품 안전성 향상과 소비자 경험 혁신을 동시에 추구하는 차세대 포장 기술이다.`,"suggestion":`① Active vs Intelligent 차이 명확히 구분하여 서술. ② 132회 4교시 2번(HMR 스마트 패키징)과 연계. ③ RFID와 바코드 비교 추가 학습.`},
+{"id":`111-2-1`,"exam":`111회`,"edu":2,"no":1,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`상`,"title":`골판지상자 설계 시 필요한 안전율에 대하여 설명하고, 아래 기준으로 할 경우 안전율을 계산하시오. [열화요인: 제조 시 5%, 저장기간 30%, 보관 환경 35%, 적재방법 20%, 수송·취급 15%]`,"intro":`골판지 상자의 안전율(SF)은 이론 BCT 대비 실제 유통 환경에서 발생하는 다양한 열화 요인을 반영한 보정 계수이다. 각 열화율을 독립적으로 적용하여 잔존강도의 곱으로 계산한다.`,"bodies":[{"title":`안전율 계산 공식 및 풀이`,"content":``,"formula":{"title":`안전율 계산 (열화율 복합 적용)`,"items":[`잔존강도 = (1-r₁)×(1-r₂)×(1-r₃)×(1-r₄)×(1-r₅)`,``,`= (1-0.05)×(1-0.30)×(1-0.35)×(1-0.20)×(1-0.15)`,`= 0.95 × 0.70 × 0.65 × 0.80 × 0.85`,``,`단계 계산:`,`  0.95 × 0.70 = 0.665`,`  0.665 × 0.65 = 0.432`,`  0.432 × 0.80 = 0.346`,`  0.346 × 0.85 ≈ 0.294`,``,`안전율 SF = 1 / 0.294 ≈ 3.40`],"note":`※ 결과: SF ≈ 3.40 → 설계 BCT = 내용물 총중량 × 3.40 이상`}},{"title":`열화 요인별 해설`,"content":``,"table":{"headers":[`열화 요인`,`열화율`,`원인`],"rows":[[`제조 시`,`5%`,`접착 불균일, 흡습, 재단 불량`],[`저장기간`,`30%`,`장기 크리프(Creep) 변형`],[`보관 환경`,`35%`,`고온·고습으로 강도 저하 (최대 영향)`],[`적재방법`,`20%`,`편심 적재, 불규칙 적재`],[`수송·취급`,`15%`,`진동, 충격, 취급 시 손상`]]}}],"conclusion":`주어진 조건으로 계산한 안전율은 약 3.40이다. 설계 필요 BCT = 내용물 총중량 × 3.40으로 산출하며, 보관 환경(35%)과 저장기간(30%)이 강도 열화의 주요 요인이다.`,"suggestion":`① 열화율 계산 공식 (1-r₁)×(1-r₂)×… 형태 암기. ② BCT 계산 후 KS T 1034 등급 판정까지 연계. ③ 108회 1교시-3번과 병행 학습.`},
+{"id":`111-3-4`,"exam":`111회`,"edu":3,"no":4,"cat1":`금속·유리 용기`,"cat2":`금속캔 종류·구조`,"freq":9,"diff":`중`,"title":`금속캔에서 2피스캔의 성형방법에 따른 분류 중 3종류의 이름과 형태를 설명하시오.`,"intro":`2피스캔은 뚜껑(End)과 몸통+바닥 일체형(Body)의 2부품으로 구성된 캔으로, 3피스캔 대비 접합 이음매가 없어 내압·내식성이 우수하다. 성형 방법에 따라 DI캔, DTR캔, 임팩트 압출캔으로 분류된다.`,"bodies":[{"title":`2피스캔 3종 비교`,"content":``,"table":{"headers":[`종류`,`성형 방법`,`특징`,`주요 용도`],"rows":[[`DI캔 (Draw & Ironing)`,`드로잉(Drawing)+아이어닝(Ironing) 박육화`,`경량·고강도·고속 생산, 표면 매끄러움`,`음료캔(알루미늄·철)`],[`DTR캔 (Draw-Thin Redraw)`,`박육 드로잉+재드로잉`,`두꺼운 소재 가능, 식품캔 적합`,`식품캔(참치·과일통조림)`],[`임팩트 압출캔`,`충격 압출 성형`,`알루미늄 특화, 두꺼운 바닥`,`에어로졸·탄산음료 Al캔`]]}}],"conclusion":`DI캔(고속 음료용), DTR캔(식품통조림), 임팩트 압출캔(에어로졸) 3종은 성형 방법과 용도가 다르며, 국내 음료 시장은 DI캔이 주류이다.`,"suggestion":`① 3피스캔(DRD캔)과 비교: 이중권체 접합 방식 차이. ② 알루미늄 DI캔 박육화(0.09mm) 기술. ③ 108회 1교시-9번 이중권체와 연계.`},
+{"id":`114-2-3`,"exam":`114회`,"edu":2,"no":3,"cat1":`금속·유리 용기`,"cat2":`유리병 제조공정`,"freq":7,"diff":`중`,"title":`유리병의 강도를 향상시키기 위한 표면처리 방법 중 듀얼 코팅(Dual Coating)에 대하여 설명하시오.`,"intro":`듀얼 코팅(Dual Coating)은 유리병의 강도와 내스크래치성을 극대화하기 위해 Hot-end(고온 무기 코팅)와 Cold-end(저온 유기 코팅)를 순차 적용하는 이중 표면처리 공법이다. 브루밍(Blooming) 처리와 동의어로 사용된다.`,"bodies":[{"title":`듀얼 코팅 2단계 공정`,"content":``,"table":{"headers":[`단계`,`처리 내용`,`온도`,`목적`,`소재`],"rows":[[`Hot-end 코팅`,`SnCl₂ 또는 TiCl₄ 분무 → 산화막 형성`,`500~600℃`,`기반층, 1차 강도 보강`,`SnO₂ 또는 TiO₂`],[`어닐링(Lehr)`,`서냉 가마에서 점진 냉각`,`500→120℃`,`잔류 응력 제거`,`—`],[`Cold-end 코팅`,`PE 왁스·올레인산 분무`,`100~120℃`,`표면 윤활, 스크래치 방지`,`유기 왁스`]]}},{"title":`듀얼 코팅의 효과`,"content":``,"keyPoints":[{"icon":`📈`,"text":`<b>강도 향상</b>: 미처리 대비 충격강도 30~50% 향상`},{"type":`g`,"icon":`⚡`,"text":`<b>마찰계수 감소</b>: 충전 라인에서의 이송 효율 향상`},{"type":`a`,"icon":`🔄`,"text":`<b>내스크래치성</b>: 반복 세척 후에도 표면 손상 최소화`}]}],"conclusion":`듀얼 코팅은 Hot-end의 무기층(산화물)과 Cold-end의 유기층(왁스)이 시너지 효과를 내어 유리병의 표면 강도를 최대화한다. 현대 유리병 생산의 표준 공정으로 자리잡고 있다.`,"suggestion":`① 브루밍 처리와 듀얼 코팅은 동일 공정의 다른 명칭. ② 어닐링 온도 구간(500→120℃ 서냉) 암기. ③ Griffith Flaw와 연계(표면 균열 억제 원리).`},
+{"id":`114-2-4`,"exam":`114회`,"edu":2,"no":4,"cat1":`금속·유리 용기`,"cat2":`금속 소재`,"freq":5,"diff":`중`,"title":`TFS(Tin Free Steel)의 정의와 용도, 장단점에 대하여 각각 설명하시오.`,"intro":`TFS(Tin Free Steel, 무주석 강판)는 냉연강판 표면에 주석 대신 산화크롬과 금속크롬의 이중층을 전기도금한 소재로, ECCS(Electrolytic Chromium/Chromium Oxide Coated Steel)라고도 한다.`,"bodies":[{"title":`TFS와 주석도금강판 비교`,"content":``,"table":{"headers":[`항목`,`TFS`,`주석도금강판(양철)`],"rows":[[`표면 피막`,`Cr/CrOx 이중층`,`순수 주석(Sn)`],[`내식성`,`도장 유지 시 우수, 손상 시 급저하`,`자연 내식성 우수`],[`도장 밀착성`,`우수 (에폭시계 도장 최적)`,`상대적으로 열위`],[`용접성`,`불량 (Cr 산화물 방해)`,`우수 (납땜 가능)`],[`가격`,`주석캔보다 저렴 (~30%)`,`주석 가격 연동`],[`주요 용도`,`음료·식품 캔 내면 도장용`,`범용 캔 소재 (3피스 바디)`]]}},{"title":`TFS 장·단점 정리`,"content":``,"keyPoints":[{"icon":`✅`,"text":`<b>장점</b>: 저렴한 가격, 우수한 도장 밀착성, 식품접촉 내식성 확보 (도장 전제)`},{"type":`r`,"icon":`⚠️`,"text":`<b>단점</b>: 기계적 손상 시 내식성 급저하, 용접 불가 → 3피스 캔 바디 사용 불가`},{"type":`a`,"icon":`📋`,"text":`<b>규제 이슈</b>: 내면도료 에폭시계 BPA(비스페놀A) 용출 규제 강화 → Non-BPA 도료 전환 중`}]}],"conclusion":`TFS는 도장 밀착성이 우수하고 저렴하나 기계적 손상 시 내식성이 급저하되므로 내면도료 설계가 핵심이다. 용접성 불량으로 3피스 캔 바디에는 부적합하여 주로 2피스 캔과 캔 뚜껑에 사용된다.`,"suggestion":`① TFS 내면도료 BPA 이슈와 친환경 포장 연계. ② 알루미늄 캔과 TFS 캔의 재활용 경제성 비교.`},
+{"id":`117-2-1`,"exam":`117회`,"edu":2,"no":1,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`골판지상자의 압축강도 열화의 특성요인을 1)골판지 특성 2)물류 환경 조건 3)상자의 설계사양 4)상자의 제조공정 4가지 기준으로 정의하고, 제조공정의 열화요인을 3가지만 설명하시오.`,"intro":`골판지 상자의 압축강도(BCT)는 제조 후 유통 환경에서 다양한 요인에 의해 저하된다. 이를 체계적으로 분석하면 4가지 대범주로 구분되며, 특히 제조 공정의 열화 관리가 출발점이다.`,"bodies":[{"title":`4가지 범주별 열화 특성 요인`,"content":``,"table":{"headers":[`범주`,`주요 열화 요인`],"rows":[[`골판지 특성`,`원지 강도(ECT), 골높이, 수분함량, 접착 상태`],[`물류 환경 조건`,`온도(고온), 상대습도(RH↑), 진동 누적, 보관기간`],[`상자 설계 사양`,`자르침 비율, 타공·인쇄 면적, 상자 치수비, 형식(Regular/Telescoping)`],[`상자 제조공정`,`자르침 깊이, 접착제 도포 상태, 기계 조정 불량, 직각도`]]}},{"title":`제조공정 3가지 열화요인 상세`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>자르침(Score Line) 깊이 과다</b>: 자르침이 너무 깊으면 골심지 일부 파단 → BCT 5~15% 감소`},{"type":`g`,"icon":`②`,"text":`<b>접착제 불량</b>: 접착 폭 부족·불균일 → 라이너와 심지의 박리 발생 시 ECT 급저하`},{"type":`a`,"icon":`③`,"text":`<b>수분 과다 흡수</b>: 인쇄·접착 공정 중 과도한 수분 흡수 → 원지 강도 저하, 뒤틀림(Warp) 발생`}]}],"conclusion":`골판지 상자의 BCT 열화는 소재·환경·설계·제조의 4가지 범주에서 복합적으로 발생한다. 제조 공정에서는 자르침 깊이, 접착 품질, 수분 관리가 핵심이며, 이를 표준화하여 관리해야 한다.`,"suggestion":`① 열화율 계산: SF = 1/[(1-r₁)(1-r₂)...] 연계. ② 하이로우(High-Low) 현상도 제조 공정 열화의 사례. ③ 습도 열화(35%)가 가장 큰 외부 요인임을 강조.`},
+{"id":`120-1-9`,"exam":`120회`,"edu":1,"no":9,"cat1":`식품·기능성 포장`,"cat2":`스마트·지능형 포장`,"freq":6,"diff":`중`,"title":`액티브패키징(active packaging)의 의미와 종류에 대하여 설명하시오.`,"intro":`액티브 패키징(Active Packaging)은 포장 내부 또는 포장과 식품 사이에서 능동적으로 작용하여 식품 품질을 유지·향상시키는 기능성 포장이다. 단순 차단 기능의 수동적 포장에서 진화한 개념이다.`,"bodies":[{"title":`액티브 패키징 종류별 기능`,"content":``,"table":{"headers":[`종류`,`기능`,`소재·방법`,`적용 식품`],"rows":[[`탈산소제 (O₂ Scavenger)`,`포장 내 O₂ 제거`,`철분계 파우더(AGELESS), 효소계`,`견과류·빵·커피`],[`CO₂ 방출제`,`신선도 유지 가스 방출`,`탄산칼슘+수분 반응`,`신선 육류·생선`],[`탈습제 (Desiccant)`,`포장 내 수분 제거`,`실리카겔·클레이·염화칼슘`,`건조 식품·의약품`],[`에틸렌 흡수제`,`성숙 촉진 가스 흡수`,`과망간산칼륨·제올라이트`,`신선 과채류`],[`항균 포장`,`미생물 증식 억제`,`키토산 코팅·은 나노입자`,`신선식품·육류`],[`신선도 유지 필름`,`가스 투과율 조절`,`MA 필름·천공 필름`,`신선채소·절화`]]}},{"title":`Active vs Intelligent 차이`,"content":``,"keyPoints":[{"icon":`⚡`,"text":`<b>Active Packaging</b>: 포장 자체가 식품 환경에 능동적 개입 (흡수·방출 등 물리화학적 작용)`},{"type":`g`,"icon":`📡`,"text":`<b>Intelligent Packaging</b>: 식품 상태를 감지·기록·표시하지만 직접 개입하지 않음 (TTI, pH 지시계 등)`}]}],"conclusion":`액티브 패키징은 탈산소제·CO₂ 방출제·탈습제·에틸렌 흡수제·항균 포장·신선도 필름의 6가지 핵심 기술로 구성되며, Intelligent Packaging과 결합되어 스마트 포장의 핵심 기술로 발전하고 있다.`,"suggestion":`① 탈산소제 작동 원리: Fe + ½O₂ + H₂O → Fe(OH)₂ (철분 산화). ② Active와 Intelligent 차이를 명확히 구분. ③ 식품별 최적 Active 포장 조합 사례 숙지.`},
+{"id":`123-1-5`,"exam":`123회`,"edu":1,"no":5,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`하`,"title":`농산물(예, 과채류) 포장용 골판지상자에 통기공(Ventilating Hole)을 설치하는 목적에 대하여 설명하시오.`,"intro":`신선 농산물은 수확 후에도 호흡을 계속하여 CO₂를 배출하고 O₂를 소비한다. 밀폐된 골판지 상자에 장기 보관하면 CO₂ 축적과 O₂ 고갈로 혐기 호흡이 일어나 품질이 급격히 저하된다.`,"bodies":[{"title":`통기공 설치 4가지 목적`,"content":``,"keyPoints":[{"icon":`🌬️`,"text":`<b>호흡 가스 교환</b>: CO₂ 배출·O₂ 공급으로 정상 호기 호흡 유지 → 혐기 발효 방지`},{"type":`g`,"icon":`🌱`,"text":`<b>에틸렌 가스 배출</b>: 농산물 자체 성숙 촉진 가스(에틸렌) 외부 배출 → 과숙·부패 지연`},{"type":`a`,"icon":`💧`,"text":`<b>열·증산 수분 배출</b>: 호흡열 및 수분 축적 방지 → 결로·부패 예방`},{"icon":`❄️`,"text":`<b>예냉 효율 향상</b>: 통기공으로 냉기 침투 → 균일 냉각 → 선도 유지`}]},{"title":`통기공 설계 기준`,"content":``,"table":{"headers":[`항목`,`권장 기준`,`비고`],"rows":[[`통기공 면적비`,`상자 표면적의 약 3~5%`,`과도 시 BCT 저하`],[`위치`,`상·하·측면에 균형 배치`,`공기 순환 최적화`],[`형태`,`원형·슬릿형`,`내용물 이탈 방지`],[`강도 영향`,`타공 면적↑ → BCT 5~15% 저하`,`설계 시 고려 필수`]]}}],"conclusion":`통기공은 호흡 가스 교환·에틸렌 배출·열·수분 제거·예냉 효율의 4가지 목적으로 설치된다. 단, 통기공 면적이 클수록 BCT가 저하되므로 최적 면적비(3~5%) 설계가 필요하다.`,"suggestion":`① 통기공과 BCT 저하 관계 수치 암기. ② CA 저장고(Controlled Atmosphere)와의 차이 설명. ③ 에틸렌 흡수제(Active Packaging)와 연계.`},
+{"id":`126-1-5`,"exam":`126회`,"edu":1,"no":5,"cat1":`완충·수송포장`,"cat2":`수송포장 시험`,"freq":7,"diff":`중`,"title":`포장화물의 압축강도(compression strength)와 적재강도(stacking strength)의 차이점에 대하여 설명하시오.`,"intro":`포장 화물의 강도 평가에서 압축강도와 적재강도는 혼용되는 경우가 많지만 시험 방법과 목적이 근본적으로 다르다. 이를 명확히 구분하는 것이 설계와 품질관리의 기본이다.`,"bodies":[{"title":`압축강도 vs 적재강도 비교`,"content":``,"table":{"headers":[`항목`,`압축강도 (Compression Strength)`,`적재강도 (Stacking Strength)`],"rows":[[`정의`,`포장 용기 자체의 최대 수직 압축 내하력`,`실제 적재 조건에서 포장화물이 견딜 수 있는 하중`],[`시험 방법`,`압축 시험기로 일정 속도 가압`,`복수 단 실제 적재 또는 하중판 적재 후 측정`],[`시험 기준`,`ASTM D642, KS T ISO 12048`,`ASTM D4577 또는 실제 적재 모사`],[`영향 요인`,`상자 구조·재질·형상`,`적재 단수, 온도·습도, 보관기간, 상자 배열`],[`활용`,`포장재 선정·설계 기준값`,`실제 물류·보관 조건 적합성 검증`]]}},{"title":`실무 적용 관계`,"content":``,"keyPoints":[{"icon":`📐`,"text":`<b>설계 원칙</b>: 압축강도 × 열화계수 ≥ 최대 적재 하중 (적재강도 요건)`},{"type":`g`,"icon":`🌡️`,"text":`<b>환경 열화</b>: 고온·고습에서 BCT가 40~60% 감소 → 적재강도 재검증 필요`},{"type":`a`,"icon":`🔢`,"text":`<b>적재 단수 계산</b>: P = Σ(단위 중량 × 단수) → 최하단 상자 적재강도 기준`}]}],"conclusion":`압축강도는 포장재 자체의 고유 물성값이고, 적재강도는 실제 물류 조건에서의 적합성 검증값이다. 설계 시 BCT(압축강도) × 안전계수 ≥ 최대 적재 하중(적재강도 요건)을 만족해야 한다.`,"suggestion":`① BCT(Box Compression Test)와 압축강도의 관계. ② 습도·온도별 열화계수 적용 방법. ③ 팔레트 적재 계획과 연계.`},
+{"id":`129-1-13`,"exam":`129회`,"edu":1,"no":13,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`중`,"title":`최근 들어 제품의 완충포장설계 기준이 충격(Shock)에 대한 보호에서 진동(Vibration)에 대한 보호가 더 강하게 요구되고 있다. 그 이유를 설명하시오.`,"intro":`전통적 완충포장 이론은 낙하충격으로 인한 제품 손상 방지에 집중하였다. 그러나 현대 물류 환경에서는 택배 충격보다 장거리 수송 중 지속적인 진동 노출이 제품 손상의 주원인으로 인식되고 있다. (108회 1교시-13번과 동일 주제 재출제)`,"bodies":[{"title":`진동 보호가 더 중요해진 이유`,"content":``,"table":{"headers":[`변화 요인`,`내용`],"rows":[[`물류 환경 변화`,`컨테이너·장거리 화물차 수송 증가 → 장시간 진동 누적 (수백~수천 시간)`],[`제품 특성 변화`,`전자제품 소형·경량화 → 고유진동수(fn)가 수송 진동 주파수(5~200Hz)와 겹침`],[`누적 피로 파괴`,`진동: 반복 하중으로 납땜·기판의 피로 파괴 → 충격보다 실질 손상 더 많음`],[`공진(Resonance) 위험`,`fn과 가진 주파수 일치 시 진폭 수십 배 증폭 → 구조 파괴`]]}}],"conclusion":`현대 물류의 장거리화와 전자제품의 고유진동수 변화로 완충포장의 핵심 과제가 충격 방지에서 진동 제어로 이동하였다. ISTA 랜덤진동 시험이 충격시험만큼 중요해진 것도 이 때문이다.`,"suggestion":`① 108회 1교시-13번과 동일 주제. ② 공진 주파수 분리 설계 원칙. ③ PSD(Power Spectral Density) 분석 개념 추가.`},
+{"id":`129-2-2`,"exam":`129회`,"edu":2,"no":2,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`상`,"title":`아래에 제시된 조건을 활용하여 겉포장상자(압축강도=1kN, 포장화물 중량=120N)의 적재강도(Stacking Strength)를 구하시오. [습도 강도저하 20%, 보관기간 강도저하 20%, 파렛트 적재 강도저하 10%, 수송피로 강도저하 10%]`,"intro":`겉포장상자의 적재강도(Stacking Strength)는 이론 압축강도에서 각 열화 요인을 제거한 실제 허용 하중이다. 주어진 조건에서 열화율을 복합 적용하여 실제 적재 가능 단수를 결정한다.`,"bodies":[{"title":`적재강도 계산 공식 및 풀이`,"content":``,"formula":{"title":`적재강도 단계별 계산`,"items":[`잔존강도 = 압축강도 × (1-r₁)×(1-r₂)×(1-r₃)×(1-r₄)`,``,`= 1,000 N × (1-0.20)×(1-0.20)×(1-0.10)×(1-0.10)`,`= 1,000 × 0.80 × 0.80 × 0.90 × 0.90`,`= 1,000 × 0.5184`,`= 518.4 N`,``,`적재강도 = 518.4 N`,`최대 적재 단수 = 518.4 / 120 ≈ 4.3단 → 4단 적재 가능`],"note":`※ 안전 여유를 두어 4단으로 제한 (4.3단의 정수부)`}},{"title":`열화 요인별 분석`,"content":``,"table":{"headers":[`열화 요인`,`열화율`,`잔존강도`],"rows":[[`습도에 의한 강도저하`,`20%`,`×0.80`],[`보관기간에 의한 강도저하`,`20%`,`×0.80`],[`파렛트 적재에 의한 강도저하`,`10%`,`×0.90`],[`수송 피로에 의한 강도저하`,`10%`,`×0.90`],[`최종 잔존강도`,`—`,`51.84%`]]}}],"conclusion":`주어진 조건에서 적재강도는 518.4 N이며, 포장화물 중량(120 N) 기준 최대 4단 적재가 가능하다. 열화율의 복합 적용으로 이론 압축강도(1,000 N) 대비 약 48% 감소한 것을 알 수 있다.`,"suggestion":`① 열화율 곱셈 공식 암기. ② 적재 단수 계산 시 정수 처리(소수점 이하 버림). ③ 108회 2교시-1번, 111회 2교시-1번과 함께 계산문제 3종 세트로 학습.`},
+{"id":`129-2-6`,"exam":`129회`,"edu":2,"no":6,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`상`,"title":`물품의 강성 평가에 사용되는 충격시험기(Shock Machine)의 원리와 이를 통한 손상경계곡선(Damage Boundary Curve, DBC)의 작성법에 대하여 설명하시오.`,"intro":`충격시험기(Shock Machine)는 제어된 가속도 파형(Pulse)을 제품에 가하여 제품의 손상 임계값을 측정하는 전문 장비이다. 이를 통해 제품의 손상경계곡선(DBC)을 작성하면, 완충포장 설계의 과학적 기반이 된다.`,"bodies":[{"title":`충격시험기 원리`,"content":``,"keyPoints":[{"icon":`⚡`,"text":`<b>파형 생성</b>: 공압식 충격기 또는 드롭 플레이트로 하프사인(Half-sine)·사다리꼴·삼각 파형 정밀 생성`},{"type":`g`,"icon":`🎯`,"text":`<b>제어 파라미터</b>: 피크 가속도(G_peak), 속도변화(ΔV = 파형 면적), 지속시간(D) 독립 제어 가능`},{"type":`a`,"icon":`📊`,"text":`<b>측정 항목</b>: 가속도계로 가진 파형 기록, 제품 손상 여부 육안·기능 평가`}]},{"title":`DBC 작성 절차 (3단계)`,"content":``,"formula":{"title":`손상경계곡선 작성 방법`,"items":[`Step 1: ΔV 고정, G_peak를 낮은 값부터 단계적 상승`,`        → 손상 발생 직전 G값 = Gc (한계가속도) 결정`,``,`Step 2: G_peak 고정, ΔV를 낮은 값부터 단계적 상승`,`        → 손상 발생 직전 ΔV값 = ΔVc (한계속도변화) 결정`,``,`Step 3: 좌표계에 표시:`,`  x축 = ΔV (속도변화, cm/s)`,`  y축 = G_peak (가속도, g)`,`  → L자형 DBC 완성 (우하단 = 안전 영역)`],"note":`완충재 설계: 포장 후 전달 충격이 DBC 안전 영역 이내가 되도록 완충재 두께·면적 설정`}},{"title":`DBC와 완충곡선 연계 설계`,"content":``,"table":{"headers":[`도구`,`활용`],"rows":[[`DBC (손상경계곡선)`,`제품의 Gc(한계가속도), ΔVc(한계속도변화) 파악`],[`완충곡선 (Cushion Curve)`,`완충재 두께·면적별 G 전달값 파악`],[`설계 결정`,`완충곡선에서 전달 G ≤ Gc 구간의 두께·면적 선정`]]}}],"conclusion":`DBC는 충격시험기로 측정한 제품의 Gc와 ΔVc를 L자형 그래프로 표현한 것이다. 완충재 설계 시 포장 후 전달 충격이 DBC 안전 영역(우하단)에 위치하도록 완충재의 두께·면적을 결정한다.`,"suggestion":`① DBC L자형: 우하단이 손상 없는 안전 영역. ② 완충곡선(Cushion Curve)과 DBC의 연계 사용법 필수. ③ 일반 낙하시험기(Drop Tester)와의 차이 비교.`},
+{"id":`132-1-12`,"exam":`132회`,"edu":1,"no":12,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`상`,"title":`규격이 275mm×206mm×200mm인 골판지상자를 T-11형(1,100mm×1,100mm) 파렛트에 적재하려고 한다. 1단에 적재 가능한 상자의 개수와 평면적재효율(%)을 구하시오.`,"intro":`파렛트 평면적재효율 계산은 포장 설계와 물류 효율화의 핵심 계산 문제로, 상자 배열 패턴에 따라 적재 수량과 효율이 달라진다. 최대 효율을 달성하는 배열 패턴을 찾는 것이 핵심이다.`,"bodies":[{"title":`계산 조건 정리`,"content":``,"table":{"headers":[`항목`,`치수`,`비고`],"rows":[[`상자 크기`,`275mm × 206mm × 200mm`,`L × W × H`],[`파렛트 (T-11형)`,`1,100mm × 1,100mm`,`국내 표준 파렛트`],[`계산 대상`,`1단 기준 개수 및 평면 적재효율`,`—`]]}},{"title":`배열 패턴별 계산`,"content":``,"formula":{"title":`적재 계산 (핵심 공식)`,"items":[`패턴 A (동일 방향):`,`  가로: 1100 ÷ 275 = 4.0 → 4개`,`  세로: 1100 ÷ 206 = 5.3 → 5개`,`  소계: 4 × 5 = 20개`,``,`패턴 B (교차 배열):`,`  구역1 (275×206 배치): 4×5 = 20개`,`  잔여 공간 활용 검토`,``,`최대: 20개 (패턴 A)`,``,`평면 적재효율 = (상자 점유 면적 / 파렛트 면적) × 100`,`= (20 × 275 × 206) / (1100 × 1100) × 100`,`= (20 × 56,650) / 1,210,000 × 100`,`= 1,133,000 / 1,210,000 × 100 ≈ 93.6%`],"note":`※ 실제 시험에서는 다양한 배열 패턴 검토 후 최대값 선택`}}],"conclusion":`T-11형 파렛트에 275×206mm 상자를 1단 배열 시 최대 20개, 평면적재효율 약 93.6%이다. 파렛트 효율 향상을 위해 상자 치수 최적화 설계가 중요하다.`,"suggestion":`① 파렛트 종류: T-11(1100×1100), T-12(1200×1000), T-14(1100×1100) 암기. ② 적재 단수 = 차량 적재 높이 / 상자 높이. ③ 교차 배열 패턴도 검토하여 최대 개수 확인.`},
+{"id":`132-2-4`,"exam":`132회`,"edu":2,"no":4,"cat1":`플라스틱·복합필름`,"cat2":`기능성 필름`,"freq":5,"diff":`중`,"title":`증착필름은 높은 가스차단성을 가지고 있어 식품분야에서 널리 사용되고 있다. 증착 시 베이스 필름(피증착필름)이 갖추어야 할 특성에 대하여 3가지만 설명하시오.`,"intro":`증착 필름(Deposited Film)은 진공 환경에서 금속(Al) 또는 무기물(SiOx, AlOx)을 필름 표면에 나노미터 두께로 코팅하여 극히 얇은 차단층을 형성하는 기술이다. 베이스 필름의 품질이 증착 품질을 좌우한다.`,"bodies":[{"title":`베이스 필름 요구 특성 3가지`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>낮은 표면 조도(Ra)</b>: 표면이 거칠면 증착층에 핀홀·균열 발생 → Ra ≤ 20 nm 수준 필요`},{"type":`g`,"icon":`②`,"text":`<b>열적 안정성(치수 안정성)</b>: 진공 증착 중 열 노출로 필름 수축·변형 없어야 함 → BOPET, BOPA, OPP가 적합`},{"type":`a`,"icon":`③`,"text":`<b>충분한 표면 에너지(젖음성)</b>: 증착 전 코로나 방전 처리로 표면에너지 ≥ 50 dyne/cm 확보 → 증착층 밀착성 향상`}]},{"title":`증착 필름 소재별 특성`,"content":``,"table":{"headers":[`베이스 소재`,`적합 이유`,`주요 용도`],"rows":[[`BOPET`,`열 안정성, 저표면조도 우수`,`AL-PET, SiOx-PET (투명 차단필름)`],[`BOPA`,`유연성, 내핀홀성 우수`,`냉동 식품, 레토르트 파우치`],[`OPP`,`경량, 저비용`,`과자·스낵 외층 증착`]]}}],"conclusion":`증착 필름의 베이스 필름은 낮은 표면 조도, 열적 안정성, 충분한 표면 에너지의 3가지 요건을 충족해야 균일한 나노 증착층을 형성하여 고수준의 가스 차단 성능을 달성할 수 있다.`,"suggestion":`① 알루미늄 박막 두께: 약 30~50 nm. ② SiOx 투명 증착: 재활용 용이, 전자레인지 가능. ③ 증착층 OTR: 일반 PET 대비 1/100 수준.`},
+{"id":`135-1-6`,"exam":`135회`,"edu":1,"no":6,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`한국산업표준(KS T ISO 12048:1994)과 미국재료시험규격(ASTM D642:20)에서 규정하는 수송포장 용기(골판지상자)의 압축강도 측정 방법을 초기 하중(Pre-load)과 시험속도 측면에서 비교하시오.`,"intro":`골판지 상자의 압축강도(BCT) 측정은 국가별 시험 규격에 따라 세부 조건이 다르다. KS T ISO 12048과 ASTM D642는 동일한 압축 강도를 측정하지만 초기 하중(Pre-load)과 시험 속도 설정에서 차이가 있다.`,"bodies":[{"title":`KS T ISO 12048 vs ASTM D642 비교`,"content":``,"table":{"headers":[`항목`,`KS T ISO 12048 (한국/국제)`,`ASTM D642:20 (미국)`],"rows":[[`초기 하중
+(Pre-load)`,`별도 Pre-load 규정 없음
+(0 또는 최소하중에서 시작)`,`Pre-load 2~5 N 설정 후 시작
+(상자 정렬 목적)`],[`시험 속도`,`12.5 mm/min (균일 압축)`,`12.5 ± 2.5 mm/min`],[`결과 표시`,`최대 하중(N) 기록`,`최대 하중(lbf 또는 N)`],[`판정 기준`,`KS T 1034 등급표 기준`,`TAPPI·ASTM 내부 기준`],[`표준 적용 범위`,`국내·아시아 수출`,`미국·북미 수출`]]}},{"title":`Pre-load의 의미와 영향`,"content":``,"keyPoints":[{"icon":`📐`,"text":`<b>Pre-load 목적</b>: 상자와 압반(Platen) 사이의 공극 제거 → 균일 접촉 확보 → 재현성 향상`},{"type":`g`,"icon":`📊`,"text":`<b>영향</b>: Pre-load가 있으면 초기 변형이 제거되어 측정값이 다소 높게 나오는 경향`},{"type":`a`,"icon":`🔧`,"text":`<b>실무</b>: 수출 대상 국가 규격에 맞는 시험 조건 적용 → 수출 클레임 방지`}]}],"conclusion":`KS T ISO 12048과 ASTM D642는 시험 속도는 유사하나 Pre-load 설정에서 차이가 있다. 수출 포장 설계 시 목적지 국가 규격에 맞는 시험 방법을 적용하여 규격 적합성을 검증해야 한다.`,"suggestion":`① 수출 포장과 국내 포장의 규격 차이 인식. ② BCT 시험 결과의 재현성 확보를 위한 Pre-load 중요성.`},
+{"id":`135-2-3`,"exam":`135회`,"edu":2,"no":3,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`중`,"title":`물품의 강성 평가 시 사용되는 충격시험기(Shock Machine)와 물품의 일반 낙하시험기(Drop Tester)와의 차이점이 무엇이고, 충격시험기에 의한 물품의 손상경계곡선(Damage Boundary Curve) 작성 방법을 설명하시오.`,"intro":`완충포장 설계의 과학화는 제품의 파손 임계값(Critical Acceleration, Gc)을 정량화하는 충격시험기의 발전에서 비롯되었다. 일반 낙하시험과 달리 충격시험기는 가속도 파형을 정밀 제어할 수 있어 손상경계이론(DBT)의 실험적 기반이 된다.`,"bodies":[{"title":`충격시험기 vs 낙하시험기 비교`,"content":``,"table":{"headers":[`항목`,`충격시험기 (Shock Machine)`,`낙하시험기 (Drop Tester)`],"rows":[[`파형 제어`,`하프사인·사다리꼴·삼각형 파형 정밀 제어`,`낙하 후 충돌로 임의 파형 발생`],[`가속도 범위`,`10~10,000 G 정밀 제어`,`낙하 높이로 간접 조절`],[`속도변화(ΔV) 제어`,`정밀 제어 가능`,`제한적`],[`주요 용도`,`DBC 작성, 제품 취약성 평가`,`포장 완충 성능 검증 (포장 후)`],[`비용`,`매우 고가 (수천만 원 이상)`,`비교적 저가`],[`표준`,`MIL-STD-810, ASTM D3332`,`ASTM D5276, ISTA 2A`]]}},{"title":`DBC 작성 절차`,"content":``,"formula":{"title":`손상경계곡선 작성 단계`,"items":[`① ΔV 고정 → G_peak 단계적 상승 → 손상 발생 G값 = Gc`,`② G_peak 고정 → ΔV 단계적 상승 → 손상 발생 ΔV = ΔVc`,`③ 그래프 작성: x축=ΔV, y축=G → L자형 DBC`,`   L자형 우하단 = 손상 없는 안전 영역`],"note":`완충재 설계: 전달 G < Gc, 전달 ΔV < ΔVc 되도록 두께·면적 결정`}}],"conclusion":`충격시험기는 정밀한 파형 제어로 제품 손상 임계값(DBC)을 정량화하는 전문 장비이며, 낙하시험기는 포장된 상태의 완충 성능을 검증하는 장비이다. 두 장비는 상호보완적으로 사용되어 과학적 완충포장 설계를 실현한다.`,"suggestion":`① 129회 2교시-6번과 동일 주제. ② 완충곡선(Cushion Curve)과 DBC의 연계 사용 필수. ③ ISTA 시험 프로토콜 구분 학습.`},
+{"id":`135-3-3`,"exam":`135회`,"edu":3,"no":3,"cat1":`친환경·법규`,"cat2":`포장 관련 법규`,"freq":6,"diff":`중`,"title":`최근 국내에서 시행되고 있는 '순환경제사회 전환 촉진법(순환경제사회법)'의 목적과 기본원칙, 주요내용을 설명하시오.`,"intro":`'순환경제사회 전환 촉진법'(2022년 제정, 2023년 시행)은 선형 경제(생산→사용→폐기)에서 자원이 지속 순환되는 순환경제로의 전환을 촉진하기 위한 법률이다. 포장 분야에서는 과잉포장 규제, EPR 강화, 재활용 의무 확대로 직결된다.`,"bodies":[{"title":`순환경제사회법 핵심 내용`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`목적`,`자원 효율 향상, 폐기물 최소화, 순환경제 전환 촉진`],[`기본원칙`,`감량(Reduce) → 재사용(Reuse) → 재활용(Recycle) → 에너지 회수`],[`주요 의무`,`제품·포장재의 순환경제 설계 기준 도입`],[`생산자 책임`,`EPR(생산자책임재활용) 강화, 재활용 의무율 상향`],[`인증·표시`,`순환경제 성과 공시, 제품 환경 성능 표시`]]}},{"title":`포장 업계 영향`,"content":``,"keyPoints":[{"icon":`📦`,"text":`<b>포장 설계 의무</b>: 재활용 최우수 등급(Recyclability) 달성 설계 의무 강화`},{"type":`g`,"icon":`♻️`,"text":`<b>재생 원료 사용</b>: PCR(Post-Consumer Recycled) 함량 기준 도입 예정`},{"type":`a`,"icon":`⚖️`,"text":`<b>과대포장 규제</b>: 포장공간비율 기준 강화 (택배 포장 40% 이상 활용률)`}]}],"conclusion":`순환경제사회법은 포장 산업 전반에 재활용 설계 의무화와 EPR 강화를 요구한다. 포장 엔지니어는 Recyclability 기준을 이해하고, 설계 단계부터 재활용 가능성을 최우선으로 고려해야 한다.`,"suggestion":`① 자원순환기본법(구법)과의 차이 구분. ② EPR 대상 포장재 9가지 암기. ③ EU PPWR(포장폐기물규정)과 비교하여 글로벌 규제 흐름 이해.`},
+{"id":`138-1-8`,"exam":`138회`,"edu":1,"no":8,"cat1":`플라스틱·복합필름`,"cat2":`플라스틱 성형`,"freq":7,"diff":`중`,"title":`사출형성 후 제품 표면에 플로우 마크(flow mark)가 발생했다. 원인을 3가지만 설명하시오.`,"intro":`플로우 마크(Flow Mark)는 사출 성형 시 용융 수지가 금형 내에서 파상형으로 유동하며 표면에 나이테 형상의 줄무늬가 생기는 성형 불량이다. 111회 1교시 4번과 동일 주제로 재출제되었다.`,"bodies":[{"title":`플로우 마크 발생 3가지 원인`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>사출 속도 불적절 (느림)</b>: 충전 압력 부족 → 금형 내 수지 파상 충전 패턴 형성 → 표면 줄무늬`},{"type":`g`,"icon":`②`,"text":`<b>수지/금형 온도 낮음</b>: 수지 점도↑ → 유동 불량, 게이트 근방 빠른 냉각 → 파상 냉각 굳음`},{"type":`a`,"icon":`③`,"text":`<b>게이트 크기·위치 부적절</b>: 게이트 단면 너무 작으면 전단 응력↑ → 주기적 흐름 방해 → 나이테 형상`}]},{"title":`플로우 마크 대책`,"content":``,"table":{"headers":[`원인`,`대책`],"rows":[[`사출 속도 낮음`,`사출 속도 증가, 다단 속도 제어 적용`],[`온도 낮음`,`수지 온도 및 금형 온도 상승`],[`게이트 부적절`,`게이트 크기 확대, 위치 최적화`],[`보압 부족`,`보압 압력·시간 최적화`]]}}],"conclusion":`플로우 마크는 사출 속도·온도·게이트 설계의 3가지 요인으로 발생하며, 각 요인의 최적화로 해소 가능하다. 111회 기출과 동일 개념으로 빈출 주제이다.`,"suggestion":`① 111회 1교시-4번 동일 주제 (5가지 요인) 함께 학습. ② 보압(Holding Pressure) 최적화의 중요성. ③ CAE 해석(Moldflow)으로 사전 검증 방법.`},
+{"id":`138-2-6`,"exam":`138회`,"edu":2,"no":6,"cat1":`친환경·법규`,"cat2":`포장 관련 법규`,"freq":6,"diff":`중`,"title":`EU 포장 및 포장폐기물 규정(PPWR, Packaging and Packaging Waste Regulation)의 핵심 내용과 목표를 설명하시오.`,"intro":`EU PPWR(Packaging and Packaging Waste Regulation)은 2022년 유럽위원회가 제안한 기존 PPW Directive(94/62/EC)를 대체하는 강화된 포장 규제로, 2025년 이후 단계적 시행 예정이다. 국내 포장 산업에도 수출 관련 직접적 영향을 미친다.`,"bodies":[{"title":`PPWR 핵심 내용 및 목표`,"content":``,"table":{"headers":[`항목`,`내용`,`적용 시점`],"rows":[[`재활용 가능성`,`모든 포장재 재활용 가능 설계 의무 (Recyclability 100%)`,`2030년`],[`재생 원료 의무`,`플라스틱 포장에 PCR 30~65% 의무 사용`,`2030~2040년`],[`과대포장 금지`,`E-commerce 포장 공간 활용률 40% 이상`,`2030년`],[`불필요 포장 금지`,`1회용 소포장 등 15가지 형태 금지`,`2030년`],[`재사용 시스템`,`특정 카테고리 리필·재사용 시스템 도입`,`2030년`],[`라벨링·정보`,`QR코드 기반 디지털 제품 여권`,`2028년~`]]}},{"title":`국내 포장 업계 영향`,"content":``,"keyPoints":[{"icon":`🌍`,"text":`<b>수출 포장 대응</b>: EU 수출 제품은 PPWR 기준 포장 설계 필수 (Recyclability 인증)`},{"type":`g`,"icon":`♻️`,"text":`<b>재활용 설계 전환</b>: 단일 소재화, 색소 제거, 라벨 분리 용이화 → 재활용 최우수 등급 달성`},{"type":`a`,"icon":`📊`,"text":`<b>PCR 원료 확보</b>: 재생 플라스틱 원료 공급망 구축 시급, 원가 상승 대응`}]}],"conclusion":`PPWR은 2030~2040년까지 EU 내 모든 포장의 재활용 가능화, PCR 의무 사용, 과대포장 금지를 골자로 하는 역대 가장 강화된 포장 규제이다. 국내 기업도 EU 수출을 위해 조기 대응이 필요하다.`,"suggestion":`① 국내 순환경제사회법(135회 3교시-3번)과 비교. ② EPR(생산자책임재활용)과 PPWR의 차이. ③ Green Claims Directive와 함께 EU 포장 규제 체계 이해.`},
+{"id":`138-3-2`,"exam":`138회`,"edu":3,"no":2,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`골판지 포장에서 종이결(MD·CD) 설계가 구조 강도, 생산성 및 물류 품질에 미치는 영향을 종합적으로 설명하시오.`,"intro":`종이는 제지 공정에서 섬유가 한 방향으로 배향(Orientation)되어 MD(기계 방향, Machine Direction)와 CD(폭 방향, Cross Direction) 간에 물성 차이가 발생한다. 골판지 상자 설계에서 MD·CD 방향 설정은 강도, 생산성, 물류 품질에 직접 영향을 미치는 핵심 설계 변수이다.`,"bodies":[{"title":`MD vs CD 물성 차이`,"content":``,"table":{"headers":[`물성`,`MD (기계 방향)`,`CD (폭 방향)`],"rows":[[`인장강도`,`높음 (섬유 배향 방향)`,`낮음 (약 1/2~1/3)`],[`ECT(수직압축강도)`,`CD가 골판지 세로 방향일 때 유리`,`골심지 CD=상자 높이 방향 → BCT↑`],[`굽힘 강성`,`MD 방향 굽힘 더 어려움`,`CD 방향 굽힘 더 용이 → 성형 유리`],[`수분 팽창`,`CD 방향이 더 크게 팽창`,`고습 환경에서 상자 변형`]]}},{"title":`구조 강도·생산성·물류품질 영향`,"content":``,"keyPoints":[{"icon":`💪`,"text":`<b>구조 강도</b>: 골판지 심지의 골(Flute) 방향이 상자 높이와 평행(CD 방향)일 때 BCT 최대`},{"type":`g`,"icon":`⚙️`,"text":`<b>생산성</b>: MD 방향이 코러게이터 이송 방향 → 올바른 결 방향으로 절단·성형해야 스코어 품질 우수`},{"type":`a`,"icon":`🚛`,"text":`<b>물류 품질</b>: 잘못된 결 방향 → 수직 하중 시 조기 파괴, 고습에서 CD 팽창으로 상자 뒤틀림`}]}],"conclusion":`골판지 상자의 MD·CD 결 방향 설계는 BCT(수직압축강도)를 최대화하고 생산 품질을 확보하기 위한 핵심 설계 변수이다. 골 방향을 상자 높이와 평행하게 배치하는 것이 강도와 물류 품질 측면에서 최적이다.`,"suggestion":`① 골 방향과 상자 높이 관계 도식화 연습. ② 수분 흡수 시 CD 방향 팽창률이 더 크다는 특성 암기. ③ 코러게이터 공정에서 MD/CD 결정 원리.`},
+{"id":`114-2-2`,"exam":`114회`,"edu":2,"no":2,"cat1":`플라스틱·복합필름`,"cat2":`복합필름 라미네이션`,"freq":10,"diff":`중`,"title":`복합필름의 제조방법 중에서 접착제 라미네이션 방법에 대하여 설명하시오.`,"intro":`복합필름(Composite Film) 제조에 사용되는 접착제 라미네이션은 크게 드라이 라미네이션(용제계), 웨트 라미네이션(수성계), 무용제 라미네이션(Solventless)으로 구분된다. 각 방법은 접착제 특성과 용도에 따라 선택된다.`,"bodies":[{"title":`접착제 라미네이션 3종 비교`,"content":``,"table":{"headers":[`방법`,`접착제 종류`,`건조 방식`,`장점`,`단점`,`주요 용도`],"rows":[[`드라이 라미네이션`,`용제계 (우레탄계)`,`오븐 건조 60~90℃`,`접착강도 최고, 범용 기재`,`VOC 발생, 잔류용제`,`레토르트·진공포장`],[`웨트 라미네이션`,`수성계 (전분·PVA)`,`오븐 건조`,`무용제, 저비용`,`종이·셀로판 기재 한정`,`식품 봉투·종이 라미`],[`무용제 라미네이션`,`무용제 우레탄 2액형`,`UV 또는 열경화`,`VOC 없음, 고속 생산`,`기재 조합 제한적`,`위생용품·의약품 포장`]]}},{"title":`드라이 라미네이션 공정 상세`,"content":``,"flow":[`기재 1 공급`,`접착제 도포 (Gravure Roll)`,`건조 오븐 (60~90℃)`,`기재 2 합지 (Nip Roll)`,`에이징 (40℃, 24~72hr)`,`권취·검사`]},{"title":`에이징(Aging) 공정의 중요성`,"content":``,"keyPoints":[{"icon":`⏱️`,"text":`<b>에이징 목적</b>: 2액형 우레탄 접착제의 경화(Crosslinking) 완료 → 최종 접착강도 달성`},{"type":`g`,"icon":`🌡️`,"text":`<b>조건</b>: 40℃, 상대습도 50% 이하, 24~72시간 보관`},{"type":`a`,"icon":`⚠️`,"text":`<b>에이징 불충분 시</b>: 접착강도 부족, 잔류 이소시아네이트(NCO) 식품 이행 문제`}]}],"conclusion":`접착제 라미네이션은 드라이(용제계)·웨트(수성계)·무용제 3종으로 구분되며, 드라이 라미네이션이 접착강도와 범용성 면에서 가장 널리 사용된다. 환경 규제 강화로 무용제 라미네이션 전환이 가속화되고 있다.`,"suggestion":`① 드라이 라미 에이징 조건(40℃, 24~72h) 암기. ② 108회 1교시-5번 드라이 라미 장단점과 함께 학습. ③ 압출 라미네이션과의 차이 구분 필수.`},
+{"id":`117-2-2`,"exam":`117회`,"edu":2,"no":2,"cat1":`플라스틱·복합필름`,"cat2":`복합필름 라미네이션`,"freq":10,"diff":`상`,"title":`OPP30/PE20/VM PET12/PE20에 적용된 라미네이션 제조공법과 장·단점을 설명하고, 이 재질로 폭 300mm, 길이 1,000m의 1롤 당 무게(중량)를 구하시오.`,"intro":`OPP30/PE20/VM PET12/PE20는 4층 복합필름으로, 각 층의 두께(μm)와 특성에 맞는 라미네이션 공법이 조합된다. 중량 계산은 각 층의 두께·밀도·면적을 이용한다.`,"bodies":[{"title":`4층 구조 및 각 층 역할`,"content":``,"table":{"headers":[`층`,`소재`,`두께(μm)`,`역할`,`라미 방법`],"rows":[[`외층`,`OPP (연신 PP)`,`30`,`인쇄기재, 광택·투명성`,`드라이 라미`],[`접합층`,`PE`,`20`,`접착층, 실링 보조`,`압출 라미`],[`차단층`,`VM PET (Al 증착 PET)`,`12`,`O₂·수분 차단, 차광`,`드라이 라미`],[`내층(실링)`,`CPP 또는 PE`,`20`,`히트실링층`,`압출 라미`]]}},{"title":`1롤 중량 계산`,"content":``,"formula":{"title":`중량 계산 공식`,"items":[`중량 = Σ (각 층 두께 × 밀도 × 면적)`,``,`면적 = 폭 × 길이 = 0.3m × 1000m = 300 m²`,``,`각 층 계산 (밀도 참고: OPP≈0.91, PE≈0.92, PET≈1.38 g/cm³)`,`  OPP30: 30×10⁻⁴ cm × 0.91 g/cm³ × 300×10⁴ cm² = 819 g`,`  PE20:  20×10⁻⁴ × 0.92 × 300×10⁴ = 552 g (×2층)`,`  PET12: 12×10⁻⁴ × 1.38 × 300×10⁴ = 496.8 g`,``,`합계 = 819 + 552 + 497 + 552 ≈ 2,420 g ≈ 2.42 kg`],"note":`※ VM(증착) 층 Al 두께(30~50nm)는 미미하여 무시. 밀도는 소재별 기준값 사용`}}],"conclusion":`OPP/PE/VM PET/PE 4층 구조는 드라이 라미네이션과 압출 라미네이션을 조합하여 제조되며, 1롤(300mm×1,000m) 무게는 약 2.4 kg이다. 이 구조는 투명성·인쇄성·차단성·실링성을 모두 만족하는 스낵·과자류 포장에 적합하다.`,"suggestion":`① 각 층 밀도: OPP 0.91, PE 0.92, PET 1.38, NY 1.14 g/cm³ 암기. ② 롤 중량 계산 공식: 면적×두께×밀도 형태로 정리. ③ VM(Vapor Metallized) = 알루미늄 증착.`},
+{"id":`120-2-x`,"exam":`120회`,"edu":2,"no":3,"cat1":`플라스틱·복합필름`,"cat2":`복합필름 라미네이션`,"freq":10,"diff":`중`,"title":`레토르트 파우치(Retort Pouch) 포장재의 구조와 각 층의 역할, 그리고 레토르트 살균 공정에서 요구되는 포장재 특성에 대하여 설명하시오.`,"intro":`레토르트 파우치는 121℃ 이상 가압·가열 살균(레토르트) 공정을 견디는 고성능 복합 포장재이다. 통조림을 대체하는 유연 포장으로, 4~5층의 복합 구조가 각각의 역할을 담당한다.`,"bodies":[{"title":`레토르트 파우치 복합 구조`,"content":``,"table":{"headers":[`층`,`소재 (예시)`,`두께(μm)`,`역할`],"rows":[[`외층 (인쇄층)`,`PET 또는 NY`,`12~15`,`내열성, 내핀홀성, 인쇄 기재`],[`차단층`,`Al-Foil 또는 EVOH`,`7~9 (Al) / 15(EVOH)`,`O₂·수분 완전 차단, 차광`],[`중간 접착층`,`접착 PE 또는 우레탄계`,`—`,`층간 접착`],[`내층 (실링층)`,`CPP (Cast PP)`,`70~100`,`히트실링, 내열성, 식품 접촉`]]}},{"title":`레토르트 포장재 요구 특성`,"content":``,"keyPoints":[{"icon":`🌡️`,"text":`<b>내열성</b>: 121℃, 30~60분 레토르트 조건에서 층간 박리·변형 없어야 함`},{"type":`g`,"icon":`💧`,"text":`<b>수증기 차단성</b>: WVTR ≤ 0.1 g/m²·day → 장기 상온 보관(6~24개월) 지원`},{"type":`a`,"icon":`🛡️`,"text":`<b>내압성·내충격성</b>: 레토르트 내부 압력(~2 kg/cm²) + 낙하 충격 견딤`},{"icon":`🍽️`,"text":`<b>식품 안전성</b>: 내면 CPP의 용출 물질 기준 충족, BPA-free 설계`}]}],"conclusion":`레토르트 파우치는 PET(NY)/Al(EVOH)/CPP의 복합 구조로, 내열성·차단성·실링성을 동시에 만족한다. 121℃ 레토르트에서의 층간 접착력 유지가 핵심 품질 기준이다.`,"suggestion":`① CPP vs LLDPE: 레토르트에는 CPP(내열), 냉동에는 LLDPE 사용. ② EVOH vs Al-foil: EVOH는 투명(전자레인지 가능), Al-foil은 완전 차단. ③ 132회 3교시-3번 레토르트 파우치 물성과 연계.`},
+{"id":`126-2-x`,"exam":`126회`,"edu":2,"no":2,"cat1":`플라스틱·복합필름`,"cat2":`복합필름 라미네이션`,"freq":10,"diff":`중`,"title":`복합 필름에서 무용제(Solventless) 라미네이션의 특징과 드라이 라미네이션과의 차이점을 설명하시오.`,"intro":`무용제(Solventless) 라미네이션은 휘발성 유기용제(VOC)를 전혀 사용하지 않는 친환경 라미네이션 방법으로, 식품 포장의 잔류 용제 문제와 환경 규제 강화에 대응하는 기술이다.`,"bodies":[{"title":`무용제 라미네이션 vs 드라이 라미네이션 비교`,"content":``,"table":{"headers":[`항목`,`무용제 라미네이션`,`드라이 라미네이션`],"rows":[[`접착제`,`무용제 우레탄 2액형 (A액+B액)`,`용제계 우레탄 (MEK·EA 등 용제)`],[`도포 점도`,`저점도 (1~10 Pa·s, 가온 도포)`,`중점도 (용제로 희석)`],[`건조 공정`,`불필요 (오븐 없음)`,`필수 (60~90℃ 오븐)`],[`VOC 배출`,`없음`,`있음 (MEK, EA 등)`],[`잔류 용제`,`없음`,`관리 필요 (10 ppm 이하 기준)`],[`에너지 소비`,`낮음`,`높음 (오븐 가열)`],[`생산 속도`,`고속 가능 (400~600 m/min)`,`드라이보다 느림`],[`접착강도`,`드라이 대비 다소 낮음 (개선 중)`,`최고 수준`]]}},{"title":`무용제 라미네이션 적용 확대 배경`,"content":``,"keyPoints":[{"icon":`🌿`,"text":`<b>환경 규제</b>: VOC 배출 규제 강화 → 대기환경보전법, EU 솔벤트 지침`},{"type":`g`,"icon":`🍽️`,"text":`<b>식품 안전</b>: 잔류 용제 0 ppm → 식품 직접 접촉 포장재 안전성 강화`},{"type":`a`,"icon":`💰`,"text":`<b>원가 절감</b>: 오븐 에너지·용제 비용 절감 → 제조원가 10~20% 감소`}]}],"conclusion":`무용제 라미네이션은 VOC 無배출·잔류용제 0·에너지 절감의 3대 장점으로 드라이 라미네이션을 빠르게 대체하고 있다. 접착강도의 지속적 개선과 기재 조합 다양화로 향후 식품 포장의 주류 기술이 될 전망이다.`,"suggestion":`① 무용제 접착제 경화 원리: -NCO + -OH → 우레탄 결합(가교). ② 에이징 조건은 드라이 라미와 동일(40℃, 24~72h). ③ 친환경 포장설계와 연계.`},
+{"id":`114-3-2`,"exam":`114회`,"edu":3,"no":2,"cat1":`플라스틱·복합필름`,"cat2":`플라스틱 소재 특성`,"freq":9,"diff":`중`,"title":`플라스틱 필름의 가스투과도에 영향을 미치는 화학구조적 요인을 5가지 설명하시오.`,"intro":`플라스틱 포장재의 가스차단성(Barrier Property)은 포장 내 식품의 품질 유지에 직결된다. 가스투과도(Gas Permeability)는 소재의 화학 구조에 따라 크게 달라지며, 이를 이해하면 최적 포장재 선정이 가능하다.`,"bodies":[{"title":`가스투과도에 영향하는 5가지 화학구조 요인`,"content":``,"table":{"headers":[`요인`,`원리`,`영향 방향`,`대표 소재`],"rows":[[`결정화도 (Crystallinity)`,`결정 영역은 가스 투과 불가 → 비결정 영역만 투과`,`결정화도↑ → 투과도↓`,`PET, HDPE, PA`],[`극성기 (Polar Group)`,`-OH, -CN, -Cl 등 극성기가 고분자 사슬 간 응집력↑`,`극성↑ → O₂차단↑`,`PVOH, EVOH, PAN`],[`가교도 (Crosslinking)`,`가교 결합이 분자 운동 억제`,`가교↑ → 투과도↓`,`가교 PE`],[`방향족 고리`,`고리 구조가 가스 확산 경로 차단`,`방향족↑ → 차단↑`,`PET, 폴리카보네이트`],[`수분 민감성`,`흡습 시 극성기 팽윤 → 가스 투과 증가`,`흡습↑ → 차단성↓`,`EVOH, NY (고습 환경 주의)`]]}},{"title":`주요 소재별 O₂ 차단성 비교`,"content":``,"table":{"headers":[`소재`,`O₂TR (cc/m²·day·atm)`,`특징`],"rows":[[`PVOH`,`~0.05`,`최고 O₂ 차단, 고습 취약`],[`EVOH`,`0.05~0.5`,`PVOH 개선판, NY 보호 필요`],[`PVdC (PVDC)`,`0.1~1`,`O₂+수분 동시 차단`],[`NY`,`10~20`,`O₂ 차단 우수, 내핀홀성`],[`PET`,`20~80`,`범용 포장재`],[`OPP`,`~100`,`O₂ 차단 낮음, 외층 사용`]]}}],"conclusion":`가스투과도는 결정화도·극성기·가교도·방향족 고리·수분 민감성의 5가지 화학구조 요인으로 결정된다. 포장재 설계 시 목표 차단 성능(OTR, WVTR)을 설정하고 이에 맞는 소재를 선정하는 것이 핵심이다.`,"suggestion":`① EVOH 차단성은 습도에 크게 의존 → NY로 보호하는 NY/EVOH/PE 구조 이해. ② OTR 단위(cc/m²·day·atm) 암기. ③ 식품 종류별 요구 OTR 기준.`},
+{"id":`117-1-2`,"exam":`117회`,"edu":1,"no":2,"cat1":`플라스틱·복합필름`,"cat2":`플라스틱 소재 특성`,"freq":9,"diff":`중`,"title":`에틸렌·초산비닐공중합체(EVA) 필름의 제조법, 성질 및 용도에 대하여 설명하시오.`,"intro":`EVA(Ethylene-Vinyl Acetate Copolymer, 에틸렌·초산비닐 공중합체)는 에틸렌과 초산비닐(VAc)을 공중합한 열가소성 수지로, VAc 함량에 따라 다양한 물성을 구현할 수 있는 다목적 포장 소재이다.`,"bodies":[{"title":`EVA 특성 - VAc 함량에 따른 변화`,"content":``,"table":{"headers":[`VAc 함량`,`물성 변화`,`주요 용도`],"rows":[[`5~10%`,`PE와 유사, 유연성↑, 투명성↑`,`농업용 필름, 식품 포장`],[`15~25%`,`탄성·투명성 우수, 저온 실링`,`냉동 포장, 스트레치 필름`],[`25~40%`,`고무 유사 탄성, 접착성↑`,`핫멜트 접착제, 폼 완충재`],[`40% 이상`,`고무에 가까운 탄성`,`의료용, 특수 포장`]]}},{"title":`EVA 주요 특성`,"content":``,"keyPoints":[{"icon":`❄️`,"text":`<b>저온 유연성</b>: -40℃에서도 유연성 유지 → 냉동 식품 포장 적합`},{"type":`g`,"icon":`🔥`,"text":`<b>저온 열접착(Low Seal Temperature)</b>: PE보다 낮은 온도에서 실링 → 고속 포장 적합`},{"type":`a`,"icon":`💡`,"text":`<b>광투과율 우수</b>: 농업용 EVA 필름은 UV 투과 조절 가능 → 온실 재배 최적화`}]}],"conclusion":`EVA는 VAc 함량 조절로 유연성·접착성·투명성을 넓은 범위에서 조절할 수 있는 다목적 수지이다. 포장 분야에서는 저온 실링층과 스트레치 필름, 핫멜트 접착제의 핵심 소재로 활용된다.`,"suggestion":`① EVA와 LLDPE 비교: 둘 다 실링층이나 EVA가 더 저온 실링. ② EVA 발포폼(포장완충재)과의 연계. ③ VAc 함량별 특성 변화 곡선 이해.`},
+{"id":`120-1-x`,"exam":`120회`,"edu":1,"no":3,"cat1":`플라스틱·복합필름`,"cat2":`플라스틱 소재 특성`,"freq":9,"diff":`중`,"title":`식품 포장재로 사용되는 폴리에틸렌(PE)의 종류(LDPE, LLDPE, HDPE)별 특성과 용도를 비교 설명하시오.`,"intro":`폴리에틸렌(PE)은 포장 분야에서 가장 광범위하게 사용되는 수지로, 중합 방법과 밀도에 따라 LDPE·LLDPE·HDPE로 구분된다. 각각의 구조적 차이가 물성과 용도를 결정한다.`,"bodies":[{"title":`PE 3종 구조·물성 비교`,"content":``,"table":{"headers":[`항목`,`LDPE`,`LLDPE`,`HDPE`],"rows":[[`분지 구조`,`장분지 (Long-chain branching) 많음`,`단분지 (Short-chain branching)`,`분지 거의 없음 (선형)`],[`밀도 (g/cm³)`,`0.910~0.925`,`0.915~0.935`,`0.941~0.965`],[`결정화도`,`낮음 (45~55%)`,`중간 (50~60%)`,`높음 (70~80%)`],[`인장강도`,`낮음`,`LDPE보다 높음`,`최고`],[`투명성`,`우수`,`LDPE와 유사`,`불투명 (반투명)`],[`열접착 온도`,`낮음 (~110℃)`,`낮음 (~115℃)`,`높음 (~130℃)`],[`내화학성`,`보통`,`보통`,`우수`],[`주요 용도`,`라미 내층, 봉투`,`스트레치 필름, 냉동 포장`,`중공 성형 병, 파이프, 밀폐용기`]]}},{"title":`구조-물성 관계`,"content":``,"keyPoints":[{"icon":`🔬`,"text":`<b>LDPE</b>: 자유라디칼 중합→장분지 발달→결정화도 낮음→유연·투명`},{"type":`g`,"icon":`🔬`,"text":`<b>LLDPE</b>: Ziegler-Natta 촉매→단분지→LDPE보다 강도↑, 실링성 우수→스트레치 필름`},{"type":`a`,"icon":`🔬`,"text":`<b>HDPE</b>: 고밀도→선형 구조→결정화도 높음→강도 최고, 차단성 우수`}]}],"conclusion":`LDPE(유연·투명·저온실링), LLDPE(강도↑·스트레치), HDPE(강성·차단성)는 각각의 구조적 특성에 따라 포장 용도가 명확히 구분된다. 식품 포장 설계 시 목적에 맞는 PE 선택이 성능을 좌우한다.`,"suggestion":`① 밀도 암기: LDPE 0.91~0.925, LLDPE 0.915~0.935, HDPE 0.941~0.965. ② mLLDPE(메탈로센): 균일 분지 → 우수한 실링성·투명성. ③ PE 라미 구조에서의 역할(내층·실링층) 정확히 이해.`},
+{"id":`123-2-x`,"exam":`123회`,"edu":2,"no":2,"cat1":`플라스틱·복합필름`,"cat2":`플라스틱 소재 특성`,"freq":9,"diff":`중`,"title":`EVOH(에틸렌-비닐알코올 공중합체) 수지의 구조, 가스차단 원리, 포장재 적용 시 제약사항을 설명하시오.`,"intro":`EVOH(Ethylene-Vinyl Alcohol Copolymer)는 비닐알코올의 극성 -OH기에 의한 뛰어난 산소 차단성과 에틸렌에 의한 성형 가공성을 동시에 갖춘 고성능 차단 수지이다. 복합필름의 가스 차단층(Barrier Layer)으로 필수 소재이다.`,"bodies":[{"title":`EVOH 구조와 가스차단 원리`,"content":``,"keyPoints":[{"icon":`🔬`,"text":`<b>화학 구조</b>: -CH₂CH₂- (에틸렌) + -CH₂CHOH- (비닐알코올)의 랜덤 공중합체`},{"type":`g`,"icon":`⛔`,"text":`<b>차단 원리</b>: -OH기 간의 수소결합으로 분자 사슬이 촘촘히 배열 → O₂ 분자의 확산 경로 극소화`},{"type":`a`,"icon":`📊`,"text":`<b>에틸렌 함량(Et%)과 차단성</b>: Et% 낮을수록(32mol%) O₂ 차단↑, Et% 높을수록(48mol%) 성형성↑`}]},{"title":`EVOH 포장재 적용 시 제약사항`,"content":``,"table":{"headers":[`제약사항`,`원인`,`대책`],"rows":[[`고습도에서 차단성 저하`,`흡습 시 -OH기가 H₂O 결합→팽윤→기체 투과 증가`,`NY/PE 등 외부 수분차단층으로 보호`],[`단독 성형 어려움`,`결정성 강함→비용 높음, 취성`,`공압출(Co-extrusion) 다층 구조 필수`],[`재활용 어려움`,`다층 복합 구조→분리 재활용 불가`,`단일 소재 대체재 개발 이슈`],[`가격 고가`,`고급 barrier 수지`,`적정 두께 설계로 원가 최적화`]]}},{"title":`EVOH 복합 구조 설계 예`,"content":``,"flow":[`NY (외층·기계강도)`,`접착층(Tie Layer)`,`EVOH (O₂ 차단층)`,`접착층`,`CPP 또는 PE (실링층)`]}],"conclusion":`EVOH는 건조 조건에서 최고 수준의 O₂ 차단성을 발휘하나, 흡습 시 차단성이 저하되는 치명적 약점이 있다. 이를 극복하기 위해 NY나 PE 등 수분차단층으로 EVOH를 감싸는 다층 복합 구조 설계가 필수이다.`,"suggestion":`① EVOH OTR: 건조 조건 0.05~0.5, 90%RH에서 10~50배 상승. ② Al-foil vs EVOH 비교: Al은 차단 완전하나 전자레인지 불가. ③ mXD6(나일론 MXD6) vs EVOH 차단성 비교.`},
+{"id":`117-1-6`,"exam":`117회`,"edu":1,"no":6,"cat1":`식품·기능성 포장`,"cat2":`MA포장·가스치환`,"freq":9,"diff":`중`,"title":`카레 등의 레토르트 식품에 요구되는 포장재 특성을 설명하시오.`,"intro":`레토르트(Retort) 살균은 121℃, 15~30분 이상 가압·가열하는 상업 살균 방법으로, 포장재는 이 가혹한 조건을 견디면서 식품 품질을 장기 보관해야 한다. 내열성·차단성·기계적 강도가 동시에 요구되는 고성능 포장재이다.`,"bodies":[{"title":`레토르트 포장재 요구 특성`,"content":``,"table":{"headers":[`특성`,`요구 기준`,`이유·방법`],"rows":[[`내열성`,`121℃ 이상, 변형·박리 없음`,`CPP 실링층 내열 등급 확인`],[`내수성`,`장시간 열수 침지에서 강도 유지`,`NY/PET 외층 흡습 최소화`],[`열봉합성 (Heat Sealability)`,`살균 후에도 봉합 강도 유지 (≥3N/15mm)`,`CPP + Tie Layer 설계`],[`충격강도 및 파열강도`,`낙하·수송 충격 견딤`,`NY층 핀홀 방지`],[`가스차단성`,`O₂TR ≤ 0.1 cc/m²·day·atm`,`Al-foil 또는 EVOH 차단층`],[`식품 안전성`,`용출 물질 기준 충족`,`Food-grade 수지 사용`]]}}],"conclusion":`레토르트 파우치는 내열성·차단성·기계적 강도·식품 안전성의 4대 특성을 동시에 만족하는 고성능 복합 포장재이다. PET(NY)/Al-foil/CPP 3층 구조가 기본이며, EVOH 대체 구조는 전자레인지 사용이 가능한 장점이 있다.`,"suggestion":`① 레토르트 파우치 구조: PET12/Al9/CPP70 (기본형). ② 투명 레토르트: PET/NY/EVOH/CPP (Al 없음→전자레인지 가능). ③ 117회 1교시-6번과 132회 3교시-3번 같은 주제.`},
+{"id":`123-1-x`,"exam":`123회`,"edu":1,"no":4,"cat1":`식품·기능성 포장`,"cat2":`MA포장·가스치환`,"freq":9,"diff":`중`,"title":`식품포장에서 탈산소제(O₂ Scavenger)의 작동 원리와 종류, 사용 시 주의사항을 설명하시오.`,"intro":`탈산소제(O₂ Scavenger)는 식품 포장 내의 잔류 산소를 화학적으로 흡수·제거하여 O₂ 농도를 0.1% 이하로 유지함으로써 식품의 산화·호기성 미생물 증식·변색을 방지하는 액티브 포장 기술이다.`,"bodies":[{"title":`탈산소제 작동 원리 및 종류`,"content":``,"table":{"headers":[`종류`,`반응 원리`,`조건`,`특징`],"rows":[[`철분계 (주류)`,`Fe + O₂ + H₂O → Fe₂O₃ (녹 생성)`,`수분 필요 (Aw > 0.65)`,`AGELESS(미쓰비시) 대표 제품, 가장 범용`],[`아스코르빈산계`,`Vitamin C의 산화 반응`,`수분 불필요 가능`,`식품 성분 원료, 안전성 높음`],[`효소계`,`포도당 산화효소 반응`,`수분+포도당 필요`,`저온 적합`],[`고분자 담체계`,`반응성 고분자가 O₂ 직접 흡수`,`다양한 조건`,`필름 내 분산 적용 가능`]]}},{"title":`탈산소제 사용 시 주의사항`,"content":``,"keyPoints":[{"icon":`⚠️`,"text":`<b>포장 밀봉 즉시 투입</b>: 외기에 노출되면 흡습 반응 시작 → 효능 소진`},{"type":`r`,"icon":`⚠️`,"text":`<b>가스차단성 포장재 필수</b>: OTR 낮은 필름 사용 → 외부 O₂ 재유입 차단`},{"type":`a`,"icon":`💡`,"text":`<b>발열 주의</b>: 철분계는 반응 시 발열(30~50℃) → 열에 민감한 식품 주의`},{"icon":`🚫`,"text":`<b>전자레인지 사용 불가</b>: 철분계 탈산소제는 금속 → 전자레인지 사용 시 스파크 위험`}]}],"conclusion":`탈산소제는 철분계가 가장 범용적으로 사용되며, O₂ 농도를 0.1% 이하로 낮춰 식품의 산화·호기성 부패를 근본적으로 방지한다. 포장 밀봉 즉시 투입과 고차단성 포장재 사용이 핵심 요건이다.`,"suggestion":`① MA포장(가스 치환)과 탈산소제(흡수 방식) 차이 구분. ② 철분계 반응식 암기: Fe + ½O₂ + H₂O → Fe(OH)₂. ③ Active Packaging의 대표 사례.`},
+{"id":`114-1-9`,"exam":`114회`,"edu":1,"no":9,"cat1":`금속·유리 용기`,"cat2":`금속캔 종류·구조`,"freq":9,"diff":`중`,"title":`금속 캔의 덮개(End)에 적용되고 있는 익스팬션링(Expansion Ring)의 역할에 대하여 설명하시오.`,"intro":`익스팬션링(Expansion Ring)은 금속캔 덮개(End) 주변부에 동심원 형태로 성형된 홈(Groove) 구조로, 레토르트 살균이나 내압 변화 시 캔 덮개에 발생하는 응력을 흡수하는 안전 구조이다.`,"bodies":[{"title":`익스팬션링의 역할`,"content":``,"keyPoints":[{"icon":`🔄`,"text":`<b>압력 변형 흡수</b>: 레토르트 가열 시 내압 상승(~2 kg/cm²)으로 덮개 팽창 → 링이 신축하여 변형 흡수`},{"type":`g`,"icon":`🛡️`,"text":`<b>이중권체 보호</b>: 덮개 외주부의 응력이 이중권체(Double Seam)에 집중되지 않도록 분산`},{"type":`a`,"icon":`💪`,"text":`<b>역압 효과</b>: 냉각 시 내압 저하로 덮개가 오목해지는 buckling 방지`},{"icon":`📐`,"text":`<b>스택킹(Stacking) 안정성</b>: 캔 덮개의 동심원 구조가 쌓을 때 미끄럼 방지`}]},{"title":`익스팬션링 설계 위치`,"content":``,"table":{"headers":[`위치`,`역할`],"rows":[[`덮개 중앙 펀치 링`,`내압 팽창 완충 (주요 익스팬션링)`],[`덮개 외주부 단차`,`이중권체 근방 응력 분산`],[`풀탭 주변 홈`,`개봉 시 찢김 방향 가이드 (Score Line)`]]}}],"conclusion":`익스팬션링은 레토르트 살균·냉각 과정에서 캔 덮개에 가해지는 내압 변화를 흡수하여 덮개 변형·buckling·이중권체 손상을 방지하는 핵심 구조이다.`,"suggestion":`① 이중권체(Double Seam)와 함께 학습. ② 내압 변화 과정: 레토르트 가열(압↑) → 냉각(압↓) → 정상 복귀. ③ 음료 캔의 돔 구조(Dome Bottom)도 유사 역할.`},
+{"id":`117-3-1`,"exam":`117회`,"edu":3,"no":1,"cat1":`금속·유리 용기`,"cat2":`금속캔 종류·구조`,"freq":9,"diff":`중`,"title":`환경 대응을 위한 TULC(Toyo Ultra Light-weight Can)의 정의와 제조 방법 및 장점에 대하여 설명하시오.`,"intro":`TULC(Toyo Ultra Light-weight Can)는 동양제관이 개발한 극박 금속 캔으로, DI 공정과 래미네이트 강판(Laminate Steel)을 결합하여 도장 공정을 생략하고 경량화를 실현한 차세대 금속 캔이다.`,"bodies":[{"title":`TULC 정의 및 제조 방법`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`정의`,`필름 라미네이트 강판을 DI 성형한 무도장 2피스 캔`],[`원소재`,`TFS(무주석 강판)에 PET 또는 PP 필름을 양면 라미네이트`],[`성형 방법`,`DI(Draw and Ironing) 공정으로 박육·성형`],[`도장 공정`,`불필요 (라미네이트 필름이 도료 역할)`],[`벽두께`,`0.1mm 이하 (기존 캔 0.15~0.20mm 대비 경량)`]]}},{"title":`TULC의 장점`,"content":``,"keyPoints":[{"icon":`🌿`,"text":`<b>친환경</b>: 도장 공정 생략 → VOC 배출 제로, 유기용제 사용 없음`},{"type":`g`,"icon":`⚡`,"text":`<b>에너지 절감</b>: 건조 오븐 공정 생략 → 에너지 소비 30% 이상 감소`},{"type":`a`,"icon":`🔄`,"text":`<b>재활용 용이</b>: 필름 분리 없이 제철로 직접 투입 가능`},{"icon":`💪`,"text":`<b>내식성 우수</b>: 필름-금속 라미네이트로 핀홀·손상 시에도 내식성 유지`}]}],"conclusion":`TULC는 라미네이트 강판의 DI 성형으로 도장 공정을 완전 생략하여 친환경·경량화·에너지 절감을 동시에 달성한 혁신적 금속 캔이다. 음료·식품 캔 시장에서 환경 규제 대응 솔루션으로 주목받고 있다.`,"suggestion":`① DI캔 성형 원리와 연계 학습. ② TFS 내면 도료(BPA 이슈)의 대안으로 TULC 필름 라미네이트 포지셔닝. ③ 금속캔 경량화 트렌드: 알루미늄 DI캔 0.09mm, TULC 0.10mm 이하.`},
+{"id":`120-2-xx`,"exam":`120회`,"edu":2,"no":5,"cat1":`금속·유리 용기`,"cat2":`금속캔 종류·구조`,"freq":9,"diff":`중`,"title":`식품용 금속캔의 내면도장(Internal Coating)의 목적과 사용되는 도료의 종류를 설명하시오.`,"intro":`금속캔의 내면도장은 식품과 금속이 직접 접촉하는 것을 방지하는 핵심 공정이다. 내식성 확보와 식품 품질 보호가 주목적이며, 용도에 따라 다양한 도료가 사용된다.`,"bodies":[{"title":`내면도장 목적`,"content":``,"keyPoints":[{"icon":`🛡️`,"text":`<b>내식성 확보</b>: 식품 내 유기산·염분·색소가 금속(Fe/Sn)과 반응하여 부식·용출 방지`},{"type":`g`,"icon":`🍽️`,"text":`<b>식품 품질 보호</b>: 황화수소(H₂S) 발생에 의한 흑변 방지, 이미·이취 방지`},{"type":`a`,"icon":`💪`,"text":`<b>기계적 보호</b>: 캔 성형·밀봉 공정에서의 스크래치·마모 방지`}]},{"title":`내면도료 종류`,"content":``,"table":{"headers":[`도료 종류`,`특징`,`주요 적용`],"rows":[[`에폭시계`,`내식성 최고, 접착성 우수. BPA 이슈 있음`,`범용 식품캔`],[`에폭시-아크릴계`,`BPA 저감형, 내식성 우수`,`음료·주스캔`],[`폴리에스테르계`,`무색투명, 고광택, BPA-free`,`고산성 식품 (토마토)`],[`비닐계`,`내산성·내알칼리성 우수`,`맥주·탄산음료`],[`아크릴계`,`광택·유연성, 내황화 처리`,`어육·육류캔`]]}}],"conclusion":`금속캔 내면도장은 내식성·식품 품질·기계적 보호의 3대 목적으로 에폭시·폴리에스테르·비닐계 등의 도료가 사용된다. BPA(비스페놀A) 규제 강화로 에폭시계에서 BPA-free 도료로의 전환이 가속화되고 있다.`,"suggestion":`① BPA 이슈: 환경호르몬(내분비계 장애물질) → 대안: Non-BPA 에폭시, 폴리에스테르계. ② 114회 4교시-4번 내분비계 장애물질 문제와 연계. ③ 내면도장 두께: 5~15μm.`},
+{"id":`114-4-6`,"exam":`114회`,"edu":4,"no":6,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`생산자책임재활용제도(EPR: Extended Producer Responsibility)에 대하여 설명하고, 대상 포장재별 재활용이 용이한 재질과 구조에 대하여 설명하시오.`,"intro":`EPR(생산자책임재활용제도)은 제품 및 포장재의 생산자가 자신의 제품·포장재가 폐기물이 된 후의 회수·재활용 의무를 지는 제도로, 자원순환법에 의거하여 운영된다. 포장재 설계 시 EPR 재활용 등급을 고려한 설계가 의무화되고 있다.`,"bodies":[{"title":`EPR 제도 개요`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`법적 근거`,`자원의 절약과 재활용촉진에 관한 법률(자원순환법)`],[`의무 주체`,`포장재를 사용하는 제조업체·수입업체`],[`대상 포장재`,`합성수지, 유리, 금속, 종이팩, 종이 포장재 등 9가지`],[`재활용 의무량`,`전년도 출고량의 일정 비율 (품목별 50~90%)`],[`이행 방법`,`직접 회수·재활용 또는 재활용공제조합 분담금 납부`]]}},{"title":`포장재별 재활용 용이 재질·구조`,"content":``,"table":{"headers":[`포장재 종류`,`재활용 최우수 (우수) 조건`],"rows":[[`PET병`,`무색투명 PET, 수분산 라벨, PP 캡 분리 용이`],[`PE/PP 포장재`,`단일 소재, 색소 없음, 타 수지 혼용 없음`],[`유리병`,`무색 투명 유리, 라벨 수용성 접착제 사용`],[`금속캔`,`단일 금속(철/알루미늄), 내면도장 분리 불필요`],[`종이 포장재`,`코팅 없는 원지, 분리 용이한 적층 구조`]]}}],"conclusion":`EPR은 포장재 생산자가 재활용 책임을 지는 제도로, 재활용 등급(최우수/우수/보통/어려움)에 따라 재활용부과금이 차등 적용된다. 포장 설계 단계부터 재활용 최우수 등급을 목표로 단일 소재화, 분리 용이화를 설계해야 한다.`,"suggestion":`① 재활용 등급별 분담금 차등 구조 이해. ② 환경부 고시 재활용 용이성 등급 평가 기준 숙지. ③ EU PPWR과 EPR 비교.`},
+{"id":`117-2-5`,"exam":`117회`,"edu":2,"no":5,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`지구환경문제와 관련하여 환경친화 포장의 기본설계 방향에 관하여 설명하시오.`,"intro":`포장 산업은 생산되는 폐기물의 약 30~40%를 차지하며 지구 환경 문제의 주요 원인 중 하나이다. 환경친화 포장(Eco-friendly Packaging)은 생애주기(LCA) 전 과정에서 환경 부하를 최소화하는 설계 철학이다.`,"bodies":[{"title":`환경친화 포장 기본설계 방향 (5R)`,"content":``,"table":{"headers":[`원칙`,`내용`,`적용 사례`],"rows":[[`Reduce (감량)`,`포장재 사용량 최소화`,`두께·중량 감소, 과대포장 금지`],[`Reuse (재사용)`,`용기 재사용 시스템`,`반복 사용 유리병, 리필 스탠드`],[`Recycle (재활용)`,`단일 소재, 분리 용이 설계`,`색소 제거, 접착제 개선`],[`Renew (재생 소재)`,`재생 원료(PCR) 사용`,`rPET, rPP, 재생 골판지`],[`Renewable (재생가능 원료)`,`바이오 기반 소재`,`PLA, PHA, 사탕수수 PE`]]}},{"title":`LCA(전과정 평가) 기반 설계`,"content":``,"keyPoints":[{"icon":`🌍`,"text":`<b>LCA(Life Cycle Assessment)</b>: 원료 채취부터 폐기까지 환경 영향을 정량 평가 (CO₂eq, 에너지 소비량)`},{"type":`g`,"icon":`📊`,"text":`<b>탄소 발자국 감소</b>: 경량화로 수송 에너지↓, 재생 원료 사용으로 제조 에너지↓`},{"type":`a`,"icon":`✅`,"text":`<b>설계 체크리스트</b>: 재활용 가능성, 과대포장 여부, 유해물질 함유 여부, 재생원료 비율`}]}],"conclusion":`환경친화 포장은 5R 원칙(Reduce·Reuse·Recycle·Renew·Renewable)과 LCA 평가를 기반으로 포장 생애주기 전체의 환경 부하를 최소화하는 방향으로 설계되어야 한다. 최근 EU PPWR·국내 순환경제법 등 규제와 연계하여 더욱 중요성이 높아지고 있다.`,"suggestion":`① 5R 원칙 암기 필수. ② LCA 4단계: 목적설정→목록분석→영향평가→해석. ③ EPR·PPWR과 연계하여 최신 규제 동향 서술.`},
+{"id":`114-1-8`,"exam":`114회`,"edu":1,"no":8,"cat1":`금속·유리 용기`,"cat2":`유리병 제조공정`,"freq":7,"diff":`중`,"title":`유리병 성형에서 블로우 앤드 블로우(Blow and Blow) 방법과 프레스 앤드 블로우(Press and Blow) 방법의 대표적인 차이점에 대하여 설명하시오.`,"intro":`유리병 성형의 두 가지 주요 방법인 Blow & Blow(B&B)와 Press & Blow(P&B)는 예비 성형(Parison 또는 Blank) 공정이 다르며, 이로 인해 병의 형태와 물성에 차이가 발생한다.`,"bodies":[{"title":`B&B vs P&B 비교`,"content":``,"table":{"headers":[`항목`,`Blow & Blow (B&B)`,`Press & Blow (P&B)`],"rows":[[`예비 성형 방법`,`공기압으로 Blank 성형`,`금속 플런저로 Blank 압착 성형`],[`적합 병 형태`,`구(口)부가 좁은 병 (협구 Narrow Neck)`,`구부가 넓은 병 (광구 Wide Mouth)`],[`두께 균일성`,`B&B보다 다소 불균일`,`우수 (플런저로 직접 성형)`],[`경량화 가능성`,`제한적`,`우수 → NNPB(Narrow Neck P&B) 개발`],[`주요 적용`,`와인병, 맥주병 (협구)`,`음료병, 잼병, 음식 용기`],[`생산 속도`,`빠름`,`P&B가 다소 느림`]]}}],"conclusion":`B&B는 협구병에, P&B는 광구병에 적합하며, P&B가 두께 균일성과 경량화 면에서 유리하다. 현대 유리병 제조에서는 NNPB(Narrow Neck P&B) 기술로 협구병에도 P&B의 장점을 적용하는 추세이다.`,"suggestion":`① NNPB(Narrow Neck Press & Blow): 협구병의 경량화 핵심 기술. ② IS(Individual Section) 성형기 원리와 연계. ③ 132회 3교시-2번 B&B/P&B 동일 주제 재출제.`},
+{"id":`132-3-2`,"exam":`132회`,"edu":3,"no":2,"cat1":`금속·유리 용기`,"cat2":`유리병 제조공정`,"freq":7,"diff":`중`,"title":`유리병의 성형 공정에서 B&B(Blow & Blow) 방식과 P&B(Press & Blow) 방식에 대하여 각각 설명하시오.`,"intro":`유리병 성형의 두 방식, B&B(Blow & Blow)와 P&B(Press & Blow)는 예비 성형(Parison 성형) 방법에서 차이가 있으며, 각각 적합한 병 형태가 다르다. (114회 1교시-8번과 동일 주제, 시험 빈출)`,"bodies":[{"title":`B&B (Blow & Blow) 방식`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>공정</b>: 용융 유리(Gob) → 1차 공기 취입(Settle Blow) → Blank 성형 → 2차 공기 취입(Final Blow) → 최종 형태`},{"type":`g`,"icon":`②`,"text":`<b>특징</b>: 협구(Narrow Neck)병 전용, 빠른 생산 속도, 상대적으로 두께 불균일`},{"type":`a`,"icon":`③`,"text":`<b>적용</b>: 와인병, 맥주병, 음료수병 등 협구형`}]},{"title":`P&B (Press & Blow) 방식`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>공정</b>: 용융 유리(Gob) → 금속 플런저(Plunger) 압착 → Parison 성형 → 공기 취입(Final Blow) → 최종 형태`},{"type":`g`,"icon":`②`,"text":`<b>특징</b>: 광구(Wide Mouth)병 전용(기본) / NNPB로 협구 확대, 두께 균일→경량화 가능`},{"type":`a`,"icon":`③`,"text":`<b>NNPB(Narrow Neck P&B)</b>: P&B를 협구병에 적용하는 기술 → 두께 균일→경량화 30% 이상`}]}],"conclusion":`B&B는 협구병·고속 생산에, P&B는 광구병·경량화에 각각 특화된다. 현대 유리병 산업에서는 NNPB 기술로 협구병에도 P&B의 경량화 장점을 적용하고 있다.`,"suggestion":`① 두 방식 차이: Blank 성형에서 '공기'(B&B) vs '플런저'(P&B) 구분. ② 경량화 수치: NNPB 적용 시 기존 대비 20~30% 경량화. ③ IS성형기 원리와 함께 학습.`},
+{"id":`114-2-6`,"exam":`114회`,"edu":2,"no":6,"cat1":`완충·수송포장`,"cat2":`수송포장 시험`,"freq":7,"diff":`중`,"title":`수송포장 화물의 유통 중 발생할 수 있는 위험요소를 쓰고, 이에 대응하는 시험 방법에 대하여 설명하시오.`,"intro":`수송포장 화물은 유통 과정에서 다양한 물리적·환경적 위험에 노출된다. 이를 체계적으로 시험·검증하는 것이 포장 설계의 핵심이며, ISTA·ASTM·KS 등 국제 표준에 기반한 시험 방법이 활용된다.`,"bodies":[{"title":`유통 위험요소와 대응 시험`,"content":``,"table":{"headers":[`위험요소`,`발생 원인`,`시험 방법`,`관련 규격`],"rows":[[`충격 (Shock)`,`낙하, 상하차 충격`,`낙하시험 (Drop Test)`,`ASTM D5276, ISTA 1A`],[`진동 (Vibration)`,`화물차·철도·선박 진동`,`진동시험 (Vibration)`,`ASTM D4169, ISTA 2A`],[`압축 (Compression)`,`적재 하중, 보관 중 압축`,`압축강도 시험 (BCT)`,`ASTM D642, KS T ISO 12048`],[`온습도 (Temp/Humidity)`,`냉장·냉동, 고온, 고습 환경`,`항온항습 시험`,`ASTM D4332, ISTA 2A`],[`수분 (Moisture)`,`빗물, 결로, 누수`,`방수·내습 시험`,`KS T 1016`],[`내용물 손상지수`,`복합 유통 환경 시뮬레이션`,`ISTA 시리즈 시험`,`ISTA 2A, 3A`]]}}],"conclusion":`수송포장의 유통 위험요소는 충격·진동·압축·온습도·수분의 5가지로 구분되며, 각각 ISTA·ASTM·KS 기준의 시험으로 검증한다. 실제 유통 환경을 재현하는 ISTA 종합 시험이 가장 신뢰도 높은 방법이다.`,"suggestion":`① ISTA 시험 프로토콜 종류: 1A(단순), 2A(표준), 3A(종합) 구분 암기. ② 낙하 높이 기준: 화물 중량별 기준 표 숙지. ③ 126회 1교시-5번 압축강도 vs 적재강도 연계.`},
+{"id":`126-2-xx`,"exam":`126회`,"edu":2,"no":1,"cat1":`완충·수송포장`,"cat2":`수송포장 시험`,"freq":7,"diff":`중`,"title":`ISTA(International Safe Transit Association) 시험 프로토콜의 종류와 특징, 적용 방법에 대하여 설명하시오.`,"intro":`ISTA(국제안전운송협회)는 포장된 제품의 유통 환경 내성을 평가하는 국제 표준 시험 프로그램을 제공한다. 단순 시험부터 실제 유통 환경을 종합 시뮬레이션하는 프로토콜까지 다양한 레벨로 구성된다.`,"bodies":[{"title":`ISTA 주요 프로토콜 비교`,"content":``,"table":{"headers":[`프로토콜`,`명칭`,`내용`,`적용 대상`],"rows":[[`ISTA 1A`,`비시뮬레이션 시험 (충격)`,`낙하, 압축 시험만 포함`,`소형 포장, 초기 스크리닝`],[`ISTA 1B`,`비시뮬레이션 시험 (진동)`,`정현파 진동 시험`,`수직 충격 이외 확인`],[`ISTA 2A`,`부분 시뮬레이션 시험`,`충격+진동+압축+온습도`,`범용 포장재 검증`],[`ISTA 2B`,`부분 시뮬레이션 (대형)`,`2A + 대형 화물 적용`,`가전·산업 포장`],[`ISTA 3A`,`전체 시뮬레이션 시험`,`실제 유통 경로 재현`,`고가 제품 포장`],[`ISTA 6-AMAZON`,`아마존 전용`,`아마존 물류 기준 특화`,`E-commerce 포장`]]}},{"title":`ISTA 시험 적용 절차`,"content":``,"flow":[`유통 경로 분석`,`적합 프로토콜 선정`,`시험 조건 설정 (낙하 높이·진동 레벨)`,`시험 실시`,`내용물·포장 손상 평가`,`합부 판정 및 개선`]}],"conclusion":`ISTA 시험은 1A(단순)~3A(종합)까지 포장 신뢰성을 체계적으로 검증하는 국제 표준이다. E-commerce 급성장으로 아마존 ISTA 6 인증이 온라인 유통 포장의 필수 요건으로 부상하고 있다.`,"suggestion":`① ISTA 2A가 가장 범용적으로 사용 암기. ② ASTM D4169 (미국 수송포장 표준)과 비교. ③ 국내 KS T 1014 수송포장 시험과 ISTA의 관계.`},
+{"id":`108-3-2b`,"exam":`108회`,"edu":3,"no":2,"cat1":`포장기계·충전`,"cat2":`포장기계 종류`,"freq":6,"diff":`중`,"title":`수직필로우포장기(VFFS)에 사용되는 보조장치인 거싯장치, 호퍼셔터, 봉지 지지장치의 역할에 대하여 설명하시오.`,"intro":`VFFS(Vertical Form Fill Seal) 보조장치에 대한 설명. (108회 기출 핵심 문제 - 포장기계 카테고리)`,"bodies":[{"title":`VFFS 3가지 보조장치`,"content":``,"table":{"headers":[`보조장치`,`역할`,`적용`],"rows":[[`거싯장치 (Gusset Folding)`,`봉지 측면에 접힘부(거싯) 형성 → 입체형 자립봉지 구현`,`커피·스낵 자립봉지`],[`호퍼셔터 (Hopper Shutter)`,`충전 타이밍에 맞춰 호퍼 출구 개폐 → 정량 충전 보조`,`과자류 정량 충전`],[`봉지 지지장치 (Pouch Holder)`,`충전 중 봉지 측면 지지 → 충전 후 하부 실링 시 형태 유지`,`대용량 파우치 포장`]]}}],"conclusion":`VFFS 보조장치는 봉지 형태 구현(거싯), 충전 정량화(호퍼셔터), 구조 안정(봉지 지지)으로 포장 품질과 생산 효율을 동시에 향상시킨다.`,"suggestion":`① VFFS vs HFFS 비교. ② 스탠딩파우치(Stand-up Pouch) 제조에서 거싯 구조 필수.`},
+{"id":`114-3-6`,"exam":`114회`,"edu":3,"no":6,"cat1":`포장기계·충전`,"cat2":`포장기계 종류`,"freq":6,"diff":`중`,"title":`오거 충전기(Auger Filler)의 구조에 대하여 설명하시오.`,"intro":`오거 충전기(Auger Filler)는 나선형 스크루(Auger)의 회전으로 분체·과립·점성 식품을 정량 충전하는 장치로, 분말 식품과 점성 제품 포장에 핵심 설비이다.`,"bodies":[{"title":`오거 충전기 구조 및 작동 원리`,"content":``,"table":{"headers":[`구성 요소`,`역할`],"rows":[[`호퍼 (Hopper)`,`충전재(분말·점성물) 저장 용기. 교반기(Agitator) 내장으로 브리징 방지`],[`오거 스크루 (Auger Screw)`,`나선형 날개 회전 → 일정 회전수 = 정량 이송`],[`충전 노즐 (Filling Nozzle)`,`제품을 포장 용기 내부로 안내`],[`서보 모터`,`스크루 회전 정밀 제어 → 정량 정밀도 향상 (±0.5~1%)`],[`분진 방지 커버`,`분말 비산 방지`]]}}],"conclusion":`오거 충전기는 스크루 회전수를 정밀 제어하여 분말·점성 식품을 고정밀도(±1%)로 충전한다. 호퍼 교반기로 브리징을 방지하고, 서보 모터 제어로 고속·정밀 충전이 가능하다.`,"suggestion":`① 피스톤 충전기(액체·반고체)와 오거 충전기(분체) 차이. ② 브리징(Bridging): 분말이 아치 형태로 막히는 현상. ③ 108회 1교시-10번 반고체 충전방식과 함께.`},
+{"id":`126-3-6`,"exam":`126회`,"edu":3,"no":6,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`글로벌 전자상거래(e-commerce) 시장 급성장으로 재사용 포장(Reusable Packaging) 시스템의 개념을 설명하고, 국내외 주요 사례와 국내 산업계 적용 시 고려 요소를 설명하시오.`,"intro":`E-commerce 급성장으로 택배 포장 폐기물이 폭발적으로 증가하면서 일회용 택배 포장을 대체하는 재사용 포장(Reusable Packaging) 시스템이 국내외에서 주목받고 있다. 이는 순환경제 전환의 핵심 도구이다.`,"bodies":[{"title":`재사용 포장 시스템 개념`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`정의`,`여러 번 사용 가능하도록 설계된 내구성 포장재를 회수·세척·재공급하는 순환 시스템`],[`핵심 요소`,`내구성 포장재 + 회수 물류 시스템 + 세척·위생 공정 + 디지털 추적(RFID/QR)`],[`목표`,`1회용 포장 대비 탄소 발자국 70~90% 감소`]]}},{"title":`국내외 주요 사례`,"content":``,"keyPoints":[{"icon":`🌍`,"text":`<b>[해외] Loop (미국·유럽)</b>: 브랜드 제품을 내구성 용기로 판매 후 회수·재사용. P&G, Unilever 등 참여`},{"type":`g`,"icon":`🇰🇷`,"text":`<b>[국내] 쿠팡 에코박스</b>: 보냉백 형태 재사용 배송 박스 시범 운영`},{"type":`a`,"icon":`🏪`,"text":`<b>[국내] 스타벅스·할리스</b>: 다회용 컵 보증금 제도, 반납 시 보증금 환급`}]},{"title":`국내 산업계 적용 시 고려 요소`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>회수 물류 비용</b>: 역물류(Reverse Logistics) 비용이 신규 포장 대비 2~3배 → 규모의 경제 필요`},{"type":`g`,"icon":`②`,"text":`<b>위생·안전성</b>: 식품 접촉 포장재의 세척·멸균 기준 충족 (식품위생법 준수)`},{"type":`a`,"icon":`③`,"text":`<b>소비자 행동 변화</b>: 반납 편의성 확보 및 인센티브 설계 필요`},{"icon":`④`,"text":`<b>표준화·호환성</b>: 다양한 제조사·유통사 간 포장 규격 표준화 필요`}]}],"conclusion":`재사용 포장 시스템은 탄소 감축 효과가 검증된 순환경제 솔루션이나, 역물류 비용·위생 기준·소비자 행동 변화의 3가지 과제 해결이 전제 조건이다. 135회 3교시-4번(E-commerce 과대포장)과 연계하여 학습할 것.`,"suggestion":`① 135회 3교시-4번 재사용 포장 동일 주제 재출제. ② FFP(Frustration-Free Packaging, 아마존) 인증과 비교. ③ 포장 공간비율 기준(환경부 고시)과 연계.`},
+{"id":`126-1-13`,"exam":`126회`,"edu":1,"no":13,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`하`,"title":`포장의 전과정평가(LCA, Life Cycle Assessment)의 의미와 목적에 대하여 설명하시오.`,"intro":`LCA(Life Cycle Assessment, 전과정평가)는 포장재의 원료 채취부터 폐기까지 전 생애주기에 걸친 환경 영향을 정량적으로 평가하는 국제 표준 방법(ISO 14040/14044)이다.`,"bodies":[{"title":`LCA 4단계 프로세스`,"content":``,"table":{"headers":[`단계`,`내용`,`핵심 활동`],"rows":[[`1. 목적·범위 설정`,`평가 목적, 기능 단위, 시스템 경계 정의`,`FU(기능 단위) 설정: 예) PET병 1L 음료 1,000회 운반`],[`2. 목록 분석 (LCI)`,`투입(원료·에너지)·산출(폐기물·배출물) 정량화`,`공정별 CO₂·에너지·용수 사용량 데이터 수집`],[`3. 영향 평가 (LCIA)`,`환경 영향 범주별 정량화`,`지구온난화(GWP), 산성화, 부영양화, 오존층 파괴`],[`4. 해석`,`결과 분석·개선 방향 도출`,`핵심 공정 파악, 대안 소재 비교`]]}},{"title":`포장 LCA 활용 목적`,"content":``,"keyPoints":[{"icon":`🌍`,"text":`<b>환경 성과 비교</b>: 플라스틱 vs 종이 vs 유리 등 소재 대안 비교 평가`},{"type":`g`,"icon":`📊`,"text":`<b>법규 대응</b>: EPR 분담금 산정, EU PPWR 탄소 발자국 공시 대응`},{"type":`a`,"icon":`💡`,"text":`<b>설계 최적화</b>: 환경 부하가 큰 공정·소재 파악 → 개선 우선순위 결정`}]}],"conclusion":`LCA는 포장재의 환경성을 객관적·정량적으로 평가하는 핵심 도구로, 4단계(목적설정→목록분석→영향평가→해석)로 수행된다. 친환경 포장 설계와 규제 대응의 과학적 근거를 제공한다.`,"suggestion":`① ISO 14040(원칙)·ISO 14044(요건) 번호 암기. ② 기능 단위(FU) 개념 중요. ③ EPR·PPWR과 연계 학습.`},
+{"id":`120-2-6`,"exam":`120회`,"edu":2,"no":6,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`상`,"title":`중량 98N, 취약성 80G인 제품을 75cm 낙하 시 전면완충·사이드패드·코너패드 각각의 최적 폴리에틸렌 패드를 완충곡선을 활용하여 설계하시오. (EPS 밀도 16kg/m³, 완충곡선 그래프 활용)`,"intro":`완충포장 설계에서 완충재의 두께와 면적은 완충곡선(Cushion Curve)을 이용해 결정한다. 부분완충 방법(전면·사이드·코너)별로 지지 면적이 다르므로 정적응력이 달라져 최적 두께도 다르게 결정된다.`,"bodies":[{"title":`완충포장 설계 핵심 공식`,"content":``,"formula":{"title":`완충재 면적·두께 결정 공식`,"items":[`정적응력 σ = W / A  [kPa]`,``,`W: 제품 중량 = 98 N`,`Gc (한계가속도) = 80 G`,`낙하 높이 = 75 cm`,``,`완충곡선에서 Gc(80G) 이하가 되는 σ의 범위 파악`,`→ 최적 σ 구간에서 두께 선택 (예: t=5cm에서 σ=2~10 kPa)`,``,`A = W / σ_optimal = 98 / σ_optimal  [m²]`],"note":`※ 완충곡선은 EPS 밀도 16kg/m³, 낙하 75cm 조건의 것 사용`}},{"title":`부분완충 방법별 면적 차이`,"content":``,"table":{"headers":[`완충 방법`,`지지 면적`,`정적응력(σ)`,`두께 결정 방향`],"rows":[[`전면완충 (6면 완전)`,`가장 큰 면 = L×W`,`가장 낮음(σ↓)`,`얇은 두께로도 충분`],[`사이드패드 (4면)`,`4개 측면 합계`,`중간`,`중간 두께`],[`코너패드 (8코너)`,`8개 코너 합계`,`가장 높음(σ↑)`,`두꺼운 완충재 필요`]]}},{"title":`설계 결론 (완충곡선 판독 기준)`,"content":``,"keyPoints":[{"icon":`📊`,"text":`<b>설계 원칙</b>: 완충곡선에서 σ 최적 구간(G 최소점 부근)을 찾아 두께 결정`},{"type":`g`,"icon":`🎯`,"text":`<b>합격 조건</b>: 전달 피크 G ≤ Gc(80G) - 안전 여유(10~20%) = 64~72G 이하`},{"type":`a`,"icon":`⚡`,"text":`<b>실무 결론</b>: 코너패드 > 사이드패드 > 전면완충 순으로 두께 증가`}]}],"conclusion":`부분완충 방법별 지지 면적 차이로 정적응력이 달라지므로 완충곡선에서 각각 최적 두께를 결정해야 한다. 코너패드는 면적이 가장 작아 σ가 높아지므로 가장 두꺼운 완충재가 필요하다.`,"suggestion":`① σ = W/A 공식 암기. ② 완충곡선 읽는 법: x축=σ, y축=G, 두께별 U자형 곡선. ③ 117회 3교시-6번 완충곡선 계산문제와 세트 학습.`},
+{"id":`120-2-2`,"exam":`120회`,"edu":2,"no":2,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`중`,"title":`완충 포장설계를 위해 제품이 받는 동적외력에 대한 취약성 평가방법에 대하여 설명하시오.`,"intro":`완충포장 설계의 출발점은 제품의 취약성(Fragility) 파악이다. 제품이 유통 과정에서 받는 동적 외력(충격·진동·압축)에 대해 어느 수준에서 손상이 시작되는지를 정량화하는 평가 방법이 핵심이다.`,"bodies":[{"title":`취약성 평가 3대 방법`,"content":``,"table":{"headers":[`외력 종류`,`평가 방법`,`측정값`,`설명`],"rows":[[`충격 (Shock)`,`충격시험기(Shock Machine)
+손상경계이론(DBT)`,`Gc (한계가속도)
+ΔVc (한계속도변화)`,`DBC(손상경계곡선) 작성 → 제품 허용 G값 결정`],[`진동 (Vibration)`,`랜덤진동 시험
+PSD 분석`,`고유진동수(fn)
+공진 주파수`,`fn 파악 → 완충재로 공진 회피 설계`],[`압축 (Compression)`,`정적/동적 압축 시험`,`허용 압축 하중(N)`,`장기 크리프 고려 → 적재 단수 결정`]]}},{"title":`손상경계이론(DBT) 적용`,"content":``,"keyPoints":[{"icon":`📈`,"text":`<b>DBC 작성</b>: 충격시험기로 Gc·ΔVc 측정 → L자형 손상경계곡선 도출`},{"type":`g`,"icon":`🎯`,"text":`<b>완충재 설계 기준</b>: 완충곡선에서 전달 G < Gc인 두께·면적 선정`},{"type":`a`,"icon":`🔬`,"text":`<b>공진 취약성</b>: 진동시험에서 공진 주파수(fn) 파악 → 완충재 fn과 분리 설계`}]}],"conclusion":`제품 취약성 평가는 충격(DBC), 진동(PSD), 압축(크리프) 3종 시험으로 완충포장 설계의 입력 데이터를 얻는 과정이다. 특히 DBC의 Gc가 완충재 선정의 핵심 기준값이다.`,"suggestion":`① 충격시험기(DBC 작성용) vs 낙하시험기(포장 후 검증용) 차이 필수 구분. ② 고유진동수(fn) 와 수송 진동 주파수 분리 원칙.`},
+{"id":`126-4-3`,"exam":`126회`,"edu":4,"no":3,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`중`,"title":`제품의 적정 완충포장 설계변수로써 공진주파수(resonance frequency)의 역할에 대하여 설명하시오.`,"intro":`공진주파수(Resonance Frequency, fn)는 시스템이 외부 가진과 자체 고유진동수가 일치할 때 진폭이 급격히 증폭되는 현상의 핵심 변수로, 완충포장 설계에서 진동 손상을 예방하는 핵심 설계 파라미터이다.`,"bodies":[{"title":`공진 현상과 포장 손상 메커니즘`,"content":``,"keyPoints":[{"icon":`📊`,"text":`<b>공진 조건</b>: 외부 가진 주파수 ω = 제품 고유진동수 fn → 진폭 급증 (이론적 무한대)`},{"type":`r`,"icon":`💥`,"text":`<b>손상 메커니즘</b>: 공진 시 응력이 수십~수백 배 증폭 → 납땜 피로파괴, 내부 부품 이탈`},{"type":`g`,"icon":`🌊`,"text":`<b>전달률(Transmissibility, TR)</b>: TR = 전달 진폭/가진 진폭. 공진점에서 TR>>1`}]},{"title":`완충포장 설계 시 공진주파수 활용`,"content":``,"formula":{"title":`완충재 고유진동수 계산`,"items":[`fn (완충 시스템) = (1/2π) × √(k/m)`,``,`k: 완충재 동적 강성(N/m)`,`m: 포장 화물 질량(kg)`,``,`설계 목표: 완충 시스템 fn ≠ 수송 진동 주파수 대역(5~200Hz)`,`→ fn을 5Hz 이하 (저주파 분리) 또는 200Hz 이상으로 설계`],"note":`수송 차량 진동 주파수 대역: 트럭 1~50Hz, 철도 5~100Hz`}},{"title":`설계 전략`,"content":``,"table":{"headers":[`전략`,`방법`,`효과`],"rows":[[`주파수 분리`,`완충재 fn을 수송 진동 주파수 대역 밖으로 설계`,`공진 회피`],[`댐핑(Damping) 증가`,`발포 폼 등 에너지 흡수 재료 사용`,`공진점 진폭 감소`],[`강성 최소화`,`부드러운 완충재 선택`,`낮은 fn으로 분리`]]}}],"conclusion":`공진주파수는 완충포장 설계에서 진동 손상을 예방하는 핵심 변수다. 완충 시스템의 fn을 수송 차량 진동 주파수 대역(1~200Hz)과 분리하여 공진에 의한 진폭 증폭과 피로 파괴를 방지해야 한다.`,"suggestion":`① fn 공식: fn = (1/2π)√(k/m) 암기. ② 전달률(TR) 개념: TR<1이 되는 영역에서 완충 효과 발생 (ω > √2·fn). ③ 135회 2교시-2번 랜덤진동 시험과 연계.`},
+{"id":`120-4-6`,"exam":`120회`,"edu":4,"no":6,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`상`,"title":`아래 조건일 때, 골판지의 원지가격(원/m²)과 골판지 소요면적(m²), 골판지상자 1개당 재료비(원/개) 및 이론압축강도(SI단위)를 산출하시오. [500×400×300mm DW B/A골, KA210/S120(B골)/K200/S120(A골)/SK180, 골조율 A골 1.6·B골 1.4, 골지 로스율 10%, Kellicutt Z^(1/3)=11.548]`,"intro":`골판지 상자 설계의 종합 계산 문제로, 원지 가격 산출 → 소요 면적 계산 → 재료비 → 이론 압축강도(BCT) 순으로 단계별로 계산한다.`,"bodies":[{"title":`원지 구성 및 가격 정리`,"content":``,"table":{"headers":[`원지`,`역할`,`링크러셔(kgf)`,`단가(원/톤)`,`g/m²`],"rows":[[`KA210`,`외부 라이너`,`10.0`,`600,000`,`210`],[`S120`,`B골 심지`,`15.0`,`300,000`,`120`],[`K200`,`중간 라이너`,`10.0`,`400,000`,`200`],[`S120`,`A골 심지`,`15.0`,`300,000`,`120`],[`SK180`,`내부 라이너`,`10.0`,`500,000`,`180`]]}},{"title":`원지 가격 및 ECT 계산`,"content":``,"formula":{"title":`단계별 계산`,"items":[`[원지 단가 = g/m² × 원/톤 ÷ 1,000,000]`,`KA210: 210×600,000÷1,000,000 = 126 원/m²`,`S120(B골): 120×300,000÷1,000,000×1.4(골조율)÷1-0.1(로스) = 56 원/m²`,`K200: 200×400,000÷1,000,000 = 80 원/m²`,`S120(A골): 120×300,000÷1,000,000×1.6÷(1-0.1) = 64 원/m²`,`SK180: 180×500,000÷1,000,000 = 90 원/m²`,``,`합계 원지 가격: 126+56+80+64+90 ≈ 416 원/m²`,``,`[소요 면적] 0201형 전개도: 2(L+W)×H + 2LW + 여유`,`= 2×(500+400)×300 + 2×500×400 + 플랩 = 약 1.22 m²`,``,`[재료비] 416 × 1.22 ≈ 507 원/개`],"note":`※ 실제 시험에서는 제공된 정확한 단가로 계산`}},{"title":`이론 압축강도(ECT→BCT) 계산`,"content":``,"formula":{"title":`Kellicutt 간편식`,"items":[`ECT = Σ(링크러셔강도 × 계수) / 1000 [kN/m]`,`= (10+15×1.4+10+15×1.6+10) / 1000`,`= (10+21+10+24+10) / 1000 = 75/1000 = 0.075 kN/m`,`→ SI 환산: 750 N/m`,``,`BCT = 5.876 × Z × h^(2/3)`,`(Z^(1/3)=11.548, Z=1,540.8, h=골판지 두께 약 8.0mm)`,`BCT ≈ 5.876 × 1,540.8^(1/3) × (0.008)^(2/3)`],"note":`※ 시험에서 Z값, h값 직접 계산 또는 제공값 사용`}}],"conclusion":`골판지 상자 설계 종합 계산은 원지 단가→소요 면적→재료비→ECT→BCT 순으로 진행된다. 골조율(A골 1.6, B골 1.4)과 로스율 적용 및 Kellicutt 공식이 핵심이다.`,"suggestion":`① 골조율 4종 암기 필수. ② 0201형 전개도 면적 계산법: 2(L+W)×H + 2LW ×2(상하 플랩). ③ SI 단위 환산: kgf → N (× 9.81).`},
+{"id":`117-2-3`,"exam":`117회`,"edu":2,"no":3,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`양면골판지 A골, B골, E골의 골 높이(mm), 30cm당 골의 수(개), 골조율, 골판지 두께를 비교하여 설명하시오.`,"intro":`골판지의 골(Flute) 형태는 A·B·C·E·F 등으로 구분되며, 골 높이·골 수·골조율이 골판지의 압축강도, 완충성, 인쇄적성 등 모든 물성을 결정한다.`,"bodies":[{"title":`A·B·E골 물성 비교`,"content":``,"table":{"headers":[`특성`,`A골`,`B골`,`C골`,`E골`],"rows":[[`골 높이(mm)`,`4.5~4.8`,`2.1~2.9`,`3.5~3.7`,`1.1~1.2`],[`30cm당 골 수`,`34±2`,`50±2`,`42±2`,`93±4`],[`골조율`,`1.60`,`1.40`,`1.50`,`1.27`],[`골판지 두께(mm)`,`~5.5`,`~3.5`,`~4.5`,`~1.5`],[`주요 특성`,`완충성·단열 최고`,`인쇄적성·강도 우수`,`균형형`,`경량·고인쇄적성`],[`주요 용도`,`가전·취약제품`,`과자·스낵·통조림`,`범용 수출용`,`POP·소형 전자`]]}},{"title":`골 형태별 특성 이해`,"content":``,"keyPoints":[{"icon":`📊`,"text":`<b>A골</b>: 골 높이 가장 높음 → 완충성·단열성 최고, 코러게이터 가공 속도 느림`},{"type":`g`,"icon":`🖨️`,"text":`<b>B골</b>: 골 수 가장 많음(50개/30cm) → 편평도 우수 → 인쇄 품질 최고`},{"type":`a`,"icon":`🎯`,"text":`<b>E골</b>: 골 높이 최소 → 얇아서 소형 소비자 포장에 적합, 인쇄적성 우수`}]}],"conclusion":`A골(완충성), B골(인쇄성), E골(경량 소형)은 각각 특화된 용도로 사용된다. 이중양면골판지(DW)에서 AB골 조합이 강도·완충성 균형에 최적이다.`,"suggestion":`① 골조율 4종 암기: A=1.60, B=1.40, C=1.50, E=1.27. ② 30cm당 골 수도 암기: A=34, B=50, C=42, E=93.`},
+{"id":`120-3-6`,"exam":`120회`,"edu":3,"no":6,"cat1":`종이·골판지 포장`,"cat2":`코러게이터 공정`,"freq":5,"diff":`중`,"title":`골판지의 하이-로우(high-low)의 문제점과 발생 원인에 대하여 설명하시오.`,"intro":`하이-로우(High-Low)는 골판지 코러게이터 제조 공정에서 골판지 표면의 골이 일정한 높이를 유지하지 못하고 높낮이가 불규칙하게 변하는 현상이다. 이는 골판지 강도 저하와 인쇄·절취 품질 문제를 일으키는 핵심 결함이다.`,"bodies":[{"title":`하이-로우 문제점`,"content":``,"keyPoints":[{"icon":`⚠️`,"text":`<b>압축강도 저하</b>: 골 높이 불균일 → ECT·BCT 편차 증가, 설계 강도 미달`},{"type":`r`,"icon":`⚠️`,"text":`<b>인쇄 품질 불량</b>: 표면 불평탄으로 인쇄압 불균일 → 인쇄 번짐, 잉크 불균일`},{"type":`a`,"icon":`⚠️`,"text":`<b>자르침·접착 불량</b>: 가공 정밀도 저하 → 접기선 불량, 접착 면적 감소`}]},{"title":`발생 원인`,"content":``,"table":{"headers":[`원인 범주`,`세부 원인`],"rows":[[`원지 문제`,`원지 수분 불균일, 수분 편차 과다 (허용 ±0.5% 초과)`],[`코러게이터 설비`,`예열기 온도 불균일, 닙압(Nip Pressure) 편차`],[`골 성형 롤`,`골 롤(Corrugating Roll) 마모·이물질 부착`],[`속도 변동`,`코러게이터 속도 급변동 시 장력 변화`],[`접착제 문제`,`접착제 도포 불균일 → 일부 라이너 박리`]]}}],"conclusion":`하이-로우는 원지 수분·설비 조건·골 롤 상태의 3가지 원인으로 발생하며, 골판지 강도 및 인쇄·가공 품질을 저하시킨다. 코러게이터 운전 조건 표준화와 원지 수분 관리가 예방의 핵심이다.`,"suggestion":`① 하이-로우 허용 기준: KS T 1034 규정 확인. ② 오버헤드 브릿지와의 연계: 속도 완충으로 하이-로우 방지 보조. ③ 111회 1교시-2번 오버헤드 브릿지와 함께 학습.`},
+{"id":`120-2-1`,"exam":`120회`,"edu":2,"no":1,"cat1":`식품·기능성 포장`,"cat2":`스마트·지능형 포장`,"freq":6,"diff":`중`,"title":`최근 4차 산업의 발전에 따라 부각되고 있는 스마트패키징(지능형 포장)의 개념, 기술적 사례에 대하여 설명하시오.`,"intro":`스마트패키징은 IoT·AI·빅데이터 등 4차 산업혁명 기술과 포장의 융합으로, 식품 품질 실시간 모니터링, 공급망 추적, 소비자 상호작용 등 기존 포장의 기능을 대폭 확장한 고부가가치 포장이다.`,"bodies":[{"title":`스마트패키징 3대 분류`,"content":``,"table":{"headers":[`분류`,`기능`,`기술 사례`,`적용 분야`],"rows":[[`Active Packaging`,`포장 내부에 능동적으로 개입`,`탈산소제·탈습제·항균 코팅·에틸렌 흡수제`,`신선식품·냉장식품`],[`Intelligent Packaging`,`식품 상태·유통 이력 감지·표시`,`TTI(온도이력표시기)·신선도 지시계·RFID·NFC`,`콜드체인·의약품`],[`Interactive Packaging`,`소비자 디지털 상호작용`,`QR코드·AR(증강현실)·NFC 태그·블록체인`,`소비자 마케팅`]]}},{"title":`4차 산업혁명 기술과 스마트패키징 융합 사례`,"content":``,"keyPoints":[{"icon":`📡`,"text":`<b>IoT 센서</b>: 포장 내 온도·충격·가스 센서 → 실시간 데이터 클라우드 전송 → 이상 발생 즉시 알림`},{"type":`g`,"icon":`🔗`,"text":`<b>블록체인</b>: 생산~소비까지 공급망 이력 분산 저장 → 위변조 불가, 안전 추적성`},{"type":`a`,"icon":`🤖`,"text":`<b>AI 분석</b>: 유통 데이터 학습 → 최적 포장 조건·유통기한 예측`},{"icon":`📱`,"text":`<b>NFC/QR</b>: 스마트폰 인식 → 원산지·성분·레시피 정보 제공`}]}],"conclusion":`스마트패키징은 Active·Intelligent·Interactive의 3대 분류로 발전하며, IoT·AI·블록체인과 융합하여 식품 안전성·공급망 투명성·소비자 경험을 혁신하고 있다.`,"suggestion":`① Active vs Intelligent 차이 명확히: Active=개입, Intelligent=감지·표시. ② TTI(Time-Temperature Indicator): 누적 온도이력에 따라 색상 변화. ③ 123회 2교시-6번 지능형 포장과 연계.`},
+{"id":`123-2-6`,"exam":`123회`,"edu":2,"no":6,"cat1":`식품·기능성 포장`,"cat2":`스마트·지능형 포장`,"freq":6,"diff":`중`,"title":`4차 산업혁명시대를 맞이하여 부각되고 있는 지능형 패키징(Intelligent Packaging)의 개념과 효과(효능)에 대하여 설명하고, 그 종류를 크게 3가지로 분류하여 각각의 특징을 설명하시오.`,"intro":`지능형 패키징(Intelligent Packaging)은 포장 내·외부 환경 또는 식품 상태를 감지하여 소비자·유통업자에게 정보를 제공하는 능동적 포장 기술이다. 4차 산업혁명 시대의 핵심 포장 기술로 부각되고 있다.`,"bodies":[{"title":`지능형 패키징 개념 및 효과`,"content":``,"keyPoints":[{"icon":`💡`,"text":`<b>개념</b>: 포장이 단순 용기에서 '정보 수집·전달 플랫폼'으로 진화`},{"type":`g`,"icon":`🎯`,"text":`<b>효과</b>: 식품 폐기 감소(신선도 정확 파악), 공급망 투명성 향상, 소비자 신뢰도 제고`}]},{"title":`지능형 패키징 3가지 분류`,"content":``,"table":{"headers":[`분류`,`개념`,`기술 사례`],"rows":[[`지시계형 (Indicator)`,`화학적·생물학적 반응으로 변화 감지·표시`,`TTI(온도이력표시기), 신선도 지시계(NH₃감지), pH 지시계`],[`센서형 (Sensor)`,`전기적·광학적 센서로 상태 측정`,`O₂ 센서, CO₂ 센서, 충격감지 센서, 습도 센서`],[`데이터 전달형 (Data Carrier)`,`포장에 부착된 매체로 정보 전달·수집`,`RFID 태그, NFC, QR코드, 바코드, 블록체인`]]}},{"title":`TTI(Time-Temperature Indicator) 상세`,"content":``,"keyPoints":[{"icon":`🌡️`,"text":`<b>원리</b>: 온도·시간에 따른 화학 반응(색상 변화) → 누적 온도이력(Time×Temperature) 표시`},{"type":`g`,"icon":`🎨`,"text":`<b>색상 판정</b>: 녹색(신선) → 노란색(주의) → 빨간색(폐기) 단계적 변화`},{"type":`a`,"icon":`🥩`,"text":`<b>적용</b>: 냉장 육류·생선·유제품 등 콜드체인 관리 필수 제품`}]}],"conclusion":`지능형 패키징은 지시계·센서·데이터전달 3종으로 구분되며, TTI가 가장 대표적인 상용화 기술이다. 4차 산업혁명의 IoT·블록체인과 융합하여 식품 안전성과 공급망 투명성을 혁신하고 있다.`,"suggestion":`① Active Packaging(개입)과 Intelligent Packaging(감지·표시) 차이 반드시 구분. ② TTI 작동 원리 서술 시 누적 온도이력 개념 포함. ③ 120회 2교시-1번과 비교 학습.`},
+{"id":`126-1-12`,"exam":`126회`,"edu":1,"no":12,"cat1":`친환경·법규`,"cat2":`포장 관련 법규`,"freq":6,"diff":`중`,"title":`생산자 책임 재활용 제도(EPR법) 및 탄소 성적 표시제도(탄소라벨링)에 대하여 설명하시오.`,"intro":`포장 분야의 핵심 환경 규제인 EPR(생산자책임재활용)과 탄소라벨링은 기업의 포장재 환경 책임을 강화하는 제도이다. 최근 탄소중립 목표와 맞물려 두 제도의 중요성이 더욱 높아지고 있다.`,"bodies":[{"title":`EPR(생산자책임재활용) 제도`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`정의`,`제품·포장재 제조자·수입자가 재활용 의무량을 달성해야 하는 제도`],[`법적 근거`,`자원의 절약과 재활용촉진에 관한 법률`],[`의무 달성 방법`,`① 직접 회수·재활용  ② 재활용공제조합 분담금 납부`],[`재활용 등급`,`재활용 최우수/우수/보통/어려움 → 분담금 차등`],[`최근 강화`,`재활용 최우수 등급 설계 의무화 (2024년~)`]]}},{"title":`탄소 성적 표시제도 (탄소라벨링)`,"content":``,"keyPoints":[{"icon":`🌍`,"text":`<b>정의</b>: 제품의 원료 채취~폐기까지 온실가스(CO₂eq) 배출량을 제품에 표시하는 제도`},{"type":`g`,"icon":`📊`,"text":`<b>표시 유형</b>: ① 탄소발자국 (절대량 표시) ② 저탄소 인증 (업종 평균 대비 낮음) ③ 탄소중립 (순 배출량=0)`},{"type":`a`,"icon":`📋`,"text":`<b>포장 적용</b>: 포장재 LCA 기반 탄소발자국 산출 → 제품 라벨에 탄소 정보 표시`}]}],"conclusion":`EPR은 재활용 의무 이행을, 탄소라벨링은 기후변화 대응을 위한 제도로, 포장 엔지니어는 재활용 최우수 등급 설계와 탄소발자국 최소화를 동시에 고려해야 한다.`,"suggestion":`① EPR 재활용 등급 4단계 암기. ② 탄소발자국 단위: kgCO₂eq/기능단위. ③ 126회 1교시-13번 LCA와 연계 학습.`},
+{"id":`132-1-11`,"exam":`132회`,"edu":1,"no":11,"cat1":`친환경·법규`,"cat2":`포장 관련 법규`,"freq":6,"diff":`중`,"title":`페트병의 일체형 마개(Tethered cap)에 대하여 설명하시오.`,"intro":`테더드 캡(Tethered Cap)은 용기 개봉 후에도 캡이 병목(Neck)에 연결된 채로 분리되지 않는 구조의 마개이다. EU PPWR의 '연결형 마개' 규정에 따라 2024년부터 의무화되어, 폐기물 관리와 재활용률 향상이 목적이다.`,"bodies":[{"title":`테더드 캡 도입 배경 및 특징`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`도입 배경`,`EU PPWR(포장폐기물규정) → 2024년부터 음료 용기 마개 연결 의무화`],[`목적`,`마개 분실·해양 쓰레기 방지, 별도 분리 없이 함께 재활용`],[`적용 대상`,`음료 용기(3L 이하) 마개 전반`],[`국내 현황`,`수출 제품 우선 적용, 국내 자발적 도입 확대 중`]]}},{"title":`테더드 캡 구조`,"content":``,"keyPoints":[{"icon":`🔗`,"text":`<b>연결 방식</b>: 캡과 병목 링이 얇은 띠(Strap)로 연결 → 개봉 시 떨어지지 않음`},{"type":`g`,"icon":`♻️`,"text":`<b>재활용 이점</b>: 병과 캡이 함께 회수 → 캡 분리 폐기 방지 → 재활용률↑`},{"type":`a`,"icon":`🔧`,"text":`<b>설계 과제</b>: 개봉 편의성 유지하면서 연결 강도 확보 → 소비자 불편 최소화`}]}],"conclusion":`테더드 캡은 EU PPWR 의무화에 따라 도입된 환경 규제 대응 포장 기술로, 마개 분실 방지와 재활용률 향상이 주목적이다. 국내 포장 업계도 수출 포장을 중심으로 빠르게 도입 중이다.`,"suggestion":`① EU PPWR(138회 2교시-6번)과 연계. ② 재활용 용이성 등급에서 테더드 캡 적용 여부가 PET병 등급 결정 요소. ③ 순환경제사회법(135회 3교시-3번)과 함께.`},
+{"id":`135-2-4`,"exam":`135회`,"edu":2,"no":4,"cat1":`물류·SCM`,"cat2":`물류 시스템`,"freq":5,"diff":`중`,"title":`의약품 유통뿐만 아니라 최근 가정간편식(HMR) 및 신선식품 수요증가에 따라 주목되고 있는 콜드체인 물류의 정의와 주요 필요기술에 대하여 설명하고, 콜드체인 물류에서 라스트마일 배송용 포장의 필요요건에 대하여 설명하시오.`,"intro":`콜드체인(Cold Chain) 물류는 온도에 민감한 제품(식품·의약품·화장품 등)을 생산에서 소비까지 지속적으로 적정 온도를 유지하며 운송·보관하는 통합 물류 시스템이다.`,"bodies":[{"title":`콜드체인 물류 정의 및 필요 기술`,"content":``,"table":{"headers":[`기술 분야`,`내용`],"rows":[[`냉장·냉동 차량`,`독립 냉동 유닛 탑재 차량, -18℃~10℃ 구간 유지`],[`온도 모니터링`,`IoT 센서 + 실시간 데이터 전송 → 이탈 즉시 경보`],[`단열 포장`,`EPS·VIP(진공단열패널)·PCM(상변환물질) 활용`],[`예냉 처리`,`출하 전 제품을 목표 온도로 낮추어 온도 유지 시간 확보`],[`온도이력 기록`,`데이터 로거, TTI 라벨로 전 유통 과정 이력 관리`]]}},{"title":`라스트마일 배송용 포장 필요요건`,"content":``,"keyPoints":[{"icon":`❄️`,"text":`<b>단열 성능</b>: 배송 시간 내 목표 온도 유지 (냉장 0~5℃, 냉동 -18℃ 이하)`},{"type":`g`,"icon":`💧`,"text":`<b>방수·방습</b>: 결로·누수 방지 → 내용물·박스 손상 방지`},{"type":`a`,"icon":`🌿`,"text":`<b>친환경성</b>: EPS 대체 친환경 단열재(종이 단열재·바이오폼) 전환 트렌드`},{"icon":`📏`,"text":`<b>표준화·경량화</b>: 배송 효율화를 위한 규격 표준화, 자동화 호환`}]}],"conclusion":`콜드체인 물류는 온도 유지·모니터링·기록의 3대 기술 축으로 구성되며, 라스트마일 포장은 단열·방수·친환경·경량화의 4가지 요건을 동시에 만족해야 한다.`,"suggestion":`① VIP(진공단열패널): 일반 EPS 대비 5~10배 단열 성능, 박형화 가능. ② PCM(상변환물질): 융해·응고 시 잠열 이용 → 온도 완충. ③ 135회 4교시-4번과 동일 주제.`},
+{"id":`126-2-5`,"exam":`126회`,"edu":2,"no":5,"cat1":`물류·SCM`,"cat2":`물류 시스템`,"freq":5,"diff":`중`,"title":`글로벌 물류기업인 아마존에서 택배유통 포장폐기물 감량화를 위해 시행하고 있는 FFP(Frustration-Free Packaging) 인증제도의 개요와 주요내용을 설명하시오.`,"intro":`FFP(Frustration-Free Packaging)는 아마존이 2008년 도입한 포장 인증 제도로, 과도한 포장재 제거, 쉬운 개봉, 재활용 가능성을 동시에 만족하는 포장 설계를 장려하는 글로벌 표준이다.`,"bodies":[{"title":`FFP 인증 3대 기준`,"content":``,"table":{"headers":[`기준`,`내용`,`기대 효과`],"rows":[[`Easy-to-Open`,`가위·칼 없이 손으로 쉽게 개봉 가능한 구조`,`소비자 편의성 향상`],[`Right-Sized`,`내용물 크기에 맞는 최소 포장 → 과대포장 금지`,`포장폐기물 감소`],[`100% Recyclable`,`포장 구성 소재 전체 재활용 가능`,`재활용률 향상`]]}},{"title":`FFP 인증 레벨`,"content":``,"keyPoints":[{"icon":`⭐`,"text":`<b>FFP (기본)</b>: 외부 배송 박스 없이 단독 유통 가능한 포장`},{"type":`g`,"icon":`⭐⭐`,"text":`<b>SIOC (Ships In Own Container)</b>: 원래 소비자 포장 그대로 배송, 추가 박스 불필요`},{"type":`a`,"icon":`⭐⭐⭐`,"text":`<b>PFP (Prep-Free Packaging)</b>: 추가 포장재(에어캡 등) 없이 아마존 창고 준비 가능`}]}],"conclusion":`FFP는 Easy-to-Open·Right-Sized·100% Recyclable의 3기준으로 포장 폐기물을 줄이고 소비자 경험을 향상시키는 글로벌 포장 인증 제도이다. 아마존 플랫폼 판매 기업에게 사실상 필수 인증으로 자리잡고 있다.`,"suggestion":`① FFP와 ISTA 6-AMAZON 시험은 세트로 이해. ② E-commerce 포장 관련 135회 3교시-4번(과대포장·재사용)과 연계. ③ 포장공간비율 규제와 연계.`},
+{"id":`120-1-7`,"exam":`120회`,"edu":1,"no":7,"cat1":`완충·수송포장`,"cat2":`완충포장 설계`,"freq":11,"diff":`중`,"title":`포장용 완충재료의 압축크리프(compressive creep) 특성에 대하여 설명하시오.`,"intro":`크리프(Creep)는 일정한 하중이 장시간 가해질 때 재료가 시간에 따라 지속적으로 변형되는 현상이다. 완충재에서 크리프는 장기 보관 시 완충 기능 저하의 핵심 원인이다.`,"bodies":[{"title":`압축크리프 현상 메커니즘`,"content":``,"keyPoints":[{"icon":`⏱️`,"text":`<b>크리프 정의</b>: 일정 정적 하중 하에서 시간 경과에 따른 변형량 증가 현상 (응력 일정, 변형 증가)`},{"type":`r`,"icon":`📉`,"text":`<b>완충재 문제</b>: 크리프로 완충재 두께 감소 → 정적응력(σ=W/A) 증가 → 전달 G값 증가 → 완충 효과 저하`},{"type":`g`,"icon":`📊`,"text":`<b>크리프 특성 곡선</b>: 초기 급속 변형(1차 크리프) → 완만한 지속 변형(2차) → 파단(3차)`}]},{"title":`완충재별 크리프 특성`,"content":``,"table":{"headers":[`완충재`,`크리프 저항성`,`보관 조건 주의`],"rows":[[`EPS 발포폼`,`높음 (치수 안정성 우수)`,`장기 보관 적합`],[`PE 발포폼`,`중간`,`온도 민감성 있음`],[`EPE(에어캡)`,`낮음 (공기 누출시)`,`단기 보관 적합`],[`종이 완충재`,`습기 영향 받음`,`방습 처리 필요`]]}}],"conclusion":`크리프는 장기 적재 보관 시 완충재 두께를 감소시켜 완충 성능을 저하시키는 핵심 요인이다. 안전계수 산정 시 크리프 열화율(10~20%)을 반드시 포함하고, 크리프 저항성이 높은 EPS를 장기 보관용에 선택해야 한다.`,"suggestion":`① 크리프 열화율 20%→안전계수 산정 시 반영. ② 골판지 상자의 보관기간 열화율도 크리프 원리. ③ 완충재 선정 기준과 연계.`},
+{"id":`126-1-4`,"exam":`126회`,"edu":1,"no":4,"cat1":`완충·수송포장`,"cat2":`수송포장 시험`,"freq":7,"diff":`중`,"title":`포장된 제품이 트럭 수송 중 물류환경 위험요소인 진동(vibration)에 의한 손상 현상에 대하여 4가지만 설명하시오.`,"intro":`트럭 수송 중 발생하는 진동은 장시간·반복적으로 제품에 작용하여 다양한 형태의 손상을 유발한다. 진동 손상은 단회성 충격과 달리 누적 피로 메커니즘으로 발생한다.`,"bodies":[{"title":`진동에 의한 4가지 손상 현상`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>공진에 의한 구조 파괴</b>: 제품 고유진동수(fn)와 수송 진동수 일치 시 진폭 수십 배 증폭 → 납땜·구조체 파괴`},{"type":`r`,"icon":`②`,"text":`<b>마모(Abrasion) 손상</b>: 제품-포장재·제품-제품 간 반복 접촉·마찰 → 표면 긁힘, 코팅 벗겨짐`},{"type":`a`,"icon":`③`,"text":`<b>피로 파괴(Fatigue Failure)</b>: 반복 저수준 하중에 의한 누적 미세 균열 → 결국 파단`},{"icon":`④`,"text":`<b>내용물 하강(Settlement)</b>: 분체·과립류 포장에서 진동으로 내용물 밀도 증가·하강 → 외관 불량`}]}],"conclusion":`진동 손상은 공진(구조 파괴), 마모(표면 손상), 피로 파괴(균열), 내용물 하강(분체류)의 4가지로 발생하며, 완충 설계 시 공진 회피와 댐핑 증가가 핵심 대책이다.`,"suggestion":`① 공진 주파수 분리 설계 원칙 함께 서술. ② 126회 4교시-3번 공진주파수 역할과 연계. ③ ISTA 랜덤진동 시험(2A) 언급.`},
+{"id":`123-1-4`,"exam":`123회`,"edu":1,"no":4,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`KS M ISO 287-2019에 의하여 골판지 원지의 함수율을 측정하였다. 건조 전 기건중량이 50g, 105℃에서 1시간 건조 후 전건중량이 45g일 때 골판지 원지의 함수율을 계산하시오.`,"intro":`종이·골판지의 함수율(Moisture Content)은 원지 강도에 직접 영향을 미치는 핵심 품질 지표이다. 함수율이 높을수록 ECT·BCT가 저하되어 안전계수 증가 요인이 된다.`,"bodies":[{"title":`함수율 계산`,"content":``,"formula":{"title":`KS M ISO 287 함수율 계산`,"items":[`함수율(%) = [(m₁ - m₂) / m₂] × 100`,``,`또는: 함수율(%) = [(m₁ - m₂) / m₁] × 100  (절건 기준)`,``,`m₁ = 기건중량(건조 전) = 50 g`,`m₂ = 전건중량(105℃ 건조 후) = 45 g`,``,`함수율 = [(50 - 45) / 45] × 100 = 5/45 × 100 ≈ 11.1%`,``,`* 절건 중량 기준: (50-45)/45 × 100 = 11.1%`,`* 기건 중량 기준: (50-45)/50 × 100 = 10.0%`],"note":`※ KS M ISO 287은 절건 중량(m₂) 기준 → 11.1% (m₁기준=10.0%와 구분)`}},{"title":`함수율과 강도의 관계`,"content":``,"keyPoints":[{"icon":`💧`,"text":`<b>함수율↑ → 강도↓</b>: 함수율 1% 증가당 ECT 약 2~5% 저하`},{"type":`g`,"icon":`📊`,"text":`<b>표준 함수율</b>: KS T 1034 시험 전 항온항습 처리(23℃, 50%RH, 48h)로 표준화`},{"type":`a`,"icon":`⚠️`,"text":`<b>코러게이터 관리</b>: 원지 함수율 8~12% 범위 관리 → 하이-로우 방지`}]}],"conclusion":`KS M ISO 287 기준 절건 중량 기준 함수율 = 11.1%이다. 골판지 원지의 함수율 관리는 코러게이터 공정 품질과 최종 상자 강도의 핵심 관리 항목이다.`,"suggestion":`① 절건 기준 vs 기건 기준 차이 암기. ② 표준 시험 조건 23℃, 50%RH 암기. ③ 함수율 1% 증가 시 강도 2~5% 저하.`},
+{"id":`108-3-5eco`,"exam":`108회`,"edu":3,"no":5,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`분해성 플라스틱에서 구분되는 생붕괴성, 광분해성, 생분해성 플라스틱에 대한 차이점을 설명하시오.`,"intro":`플라스틱 환경 오염 해결을 위해 다양한 분해성 플라스틱이 개발되고 있으나 용어 혼용이 심각하다. 생붕괴성·광분해성·생분해성은 분해 메커니즘이 근본적으로 다르므로 포장 설계 시 정확한 구분이 필수이다.`,"bodies":[{"title":`3종 분해성 플라스틱 비교`,"content":``,"table":{"headers":[`구분`,`분해 메커니즘`,`조건`,`결과물`,`문제점`],"rows":[[`생붕괴성
+(Oxo-degradable)`,`산화제 첨가 → 자외선·열에 의해 분자량 감소→파편화`,`자외선·열 노출`,`미세 플라스틱 조각`,`분해 후 미세 플라스틱 잔류 → EU 규제(2021년 금지)`],[`광분해성
+(Photo-degradable)`,`UV 흡수 발색단이 광에너지로 C-C 결합 절단`,`UV 조사 필요`,`저분자량 파편`,`실내·매립지·수중에서 분해 불가`],[`생분해성
+(Biodegradable)`,`미생물(세균·곰팡이)이 CO₂+H₂O+바이오매스로 완전 분해`,`퇴비화 조건
+(58℃, 고습도)`,`CO₂+H₂O (완전 무해)`,`특정 조건(산업 퇴비)에서만 분해`]]}},{"title":`생분해성 대표 소재`,"content":``,"table":{"headers":[`소재`,`원료`,`분해 조건`,`특징`,`포장 용도`],"rows":[[`PLA (폴리락트산)`,`옥수수·사탕수수`,`산업 퇴비(58℃+)`,`Tg 60℃, 투명, 저렴`,`컵·트레이·필름`],[`PHA (폴리히드록시알카노에이트)`,`미생물 합성`,`토양·해양 분해 가능`,`고가, 다양한 물성`,`유연 포장·의료`],[`PBAT`,`석유계+생분해`,`퇴비 조건`,`유연성 우수, PLA 혼합`,`비닐봉투·멀칭필름`],[`전분계`,`전분+가소제`,`일반 토양 가능`,`내수성 약함, 저가`,`농업용·1회용`]]}},{"title":`분해성 플라스틱 선택 기준`,"content":``,"keyPoints":[{"icon":`⚠️`,"text":`<b>생붕괴성 (Oxo) 주의</b>: EU 2021년 규제로 단일시장 판매 금지 → 미세플라스틱 문제`},{"type":`g`,"icon":`✅`,"text":`<b>생분해성 인증 기준</b>: EN 13432 (EU), ASTM D6400 (미국), KS M ISO 17088 (국내)`},{"type":`a`,"icon":`♻️`,"text":`<b>퇴비화 인프라</b>: PLA·PHA는 산업 퇴비 시설 없으면 일반 매립지에서 수백 년 → 인프라 구축 선행 필요`}]}],"conclusion":`생붕괴성(파편화), 광분해성(UV 의존), 생분해성(완전 분해)의 3종은 근본적으로 다르다. EU에서 생붕괴성(Oxo) 플라스틱은 규제로 금지되었으며, 진정한 환경 해결은 생분해성 소재 + 퇴비화 인프라 구축의 병행이 전제 조건이다.`,"suggestion":`① EN 13432 인증 기준: 6개월 내 90% 이상 생분해. ② PLA Tg 60℃ → 고온 식품 직접 접촉 부적합 암기. ③ EU Oxo 플라스틱 규제(2021년 시행) 반드시 언급.`},
+{"id":`108-4-5eco`,"exam":`108회`,"edu":4,"no":5,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`옥수수 전분을 원료로 하는 폴리유산(PLA: Poly Lactic Acid)의 합성 제조 과정을 설명하시오.`,"intro":`PLA(폴리락트산, Poly Lactic Acid)는 옥수수·사탕수수 등 재생 가능한 바이오매스로부터 생물학적·화학적 과정을 통해 합성되는 생분해성 고분자로, 석유계 플라스틱의 친환경 대체 소재이다.`,"bodies":[{"title":`PLA 합성 제조 공정 (5단계)`,"content":``,"flow":[`옥수수 전분`,`가수분해 → 포도당(Glucose)`,`발효 → 젖산(Lactic Acid) L형·D형`,`정제·농축 (99% 이상)`,`탈수 올리고머화 → 락티드(Lactide) 생성`,`개환 중합(ROP) + 촉매(Sn계)`,`PLA 고분자 완성 → 펠렛`]},{"title":`PLA 제조 핵심 단계 상세`,"content":``,"table":{"headers":[`단계`,`반응`,`온도·조건`,`핵심 포인트`],"rows":[[`발효`,`포도당 → 젖산 (호모젖산 발효균)`,`37℃, 혐기성`,`L-젖산 90% 이상 순도 필요`],[`락티드 합성`,`젖산 2분자 → 락티드 (고리형 이중에스터)`,`감압 고온`,`L,L-락티드가 PLLA 생성`],[`개환 중합`,`락티드 + 촉매(옥틸산 주석) → PLA`,`130~180℃`,`분자량·결정화도 조절`]]}},{"title":`PLA 물성 및 포장 특성`,"content":``,"keyPoints":[{"icon":`♨️`,"text":`<b>열적 특성</b>: Tg 55~65℃ (유리전이온도) → 고온 식품 직접 접촉 부적합, 내열 PLA는 결정화로 Tm 180℃↑`},{"type":`g`,"icon":`🌱`,"text":`<b>바이오 기반</b>: 석유 의존 탈피, 탄소 순환형 소재 → 탄소 발자국 PET 대비 25~55% 감소`},{"type":`a`,"icon":`♻️`,"text":`<b>생분해 조건</b>: 58℃ 이상 산업 퇴비화 시설에서 6개월 내 분해 (일반 매립지: 수백 년)`}]}],"conclusion":`PLA는 옥수수 전분 → 포도당 → 젖산 → 락티드 → PLA의 5단계 공정으로 합성되며, 생분해성·바이오 기반의 친환경 포장 소재이다. 단, 열적 한계(Tg 60℃)와 산업 퇴비 인프라 의존성을 고려한 적용이 필수이다.`,"suggestion":`① 락티드 개환 중합(ROP) 공정이 핵심 암기 포인트. ② PLA vs PHA 비교: PHA는 해양 분해 가능. ③ 생분해 인증 기준: EN 13432, ASTM D6400.`},
+{"id":`111-1-1eco`,"exam":`111회`,"edu":1,"no":1,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`지속가능 패키징(sustainable packaging)에 대하여 설명하시오.`,"intro":`지속가능 패키징(Sustainable Packaging)은 환경적·사회적·경제적 영향을 고려하여 포장의 전 생애주기(LCA)에서 환경 부하를 최소화하고, 자원을 순환시키는 방향으로 설계된 포장이다. 단순한 재활용을 넘어 원료부터 폐기까지 지속가능성을 추구한다.`,"bodies":[{"title":`SPC(지속가능포장연합) 기준 8가지`,"content":``,"table":{"headers":[`기준`,`내용`,`포장 적용`],"rows":[[`건강·안전`,`생태계·인체에 무해한 소재`,`중금속·유해물질 배제`],[`시장 기준 부합`,`소비자·법적 요건 충족`,`표시사항·규격 준수`],[`원료·에너지 최적화`,`재생 가능·재활용 원료 사용`,`rPET, rPP, 바이오PE`],[`클린 생산`,`제조 중 에너지·용수·폐기물 최소화`,`VOC 감축, 무용제 라미`],[`효율적 유통`,`운반·보관 효율 최적화`,`경량화, 파렛트 적재 최적화`],[`회수·활용 가능`,`회수 시스템 내에서 효과적 활용`,`EPR 시스템 참여`],[`재활용 가능`,`물리적·화학적 재활용 가능 설계`,`단일 소재, 색소 제거`],[`최적화된 재료 사용`,`필요 최소한의 재료 사용`,`과대포장 금지`]]}},{"title":`지속가능 패키징 평가 지표`,"content":``,"keyPoints":[{"icon":`🌍`,"text":`<b>LCA(전과정평가)</b>: ISO 14040/14044 기준으로 탄소발자국·자원소비·생태독성 정량 평가`},{"type":`g`,"icon":`♻️`,"text":`<b>재활용 가능성(Recyclability)</b>: 환경부 재활용 용이성 등급 1~4, EU PPWR 재활용 가능 기준`},{"type":`a`,"icon":`📊`,"text":`<b>바이오 기반 함량</b>: ASTM D6866 기반 재생 가능 탄소 비율 측정·인증`}]}],"conclusion":`지속가능 패키징은 SPC 8기준을 충족하며 원료 채취부터 폐기까지 전 생애주기의 환경 부하를 최소화하는 포장이다. EU PPWR, 국내 순환경제법 등 규제 강화와 함께 포장 산업의 핵심 방향으로 자리잡고 있다.`,"suggestion":`① SPC 8기준 전체 암기 필수. ② 지속가능성 3축: 환경(Planet)·사회(People)·경제(Profit) ESG와 연계. ③ EU PPWR 2030 목표치(재활용 가능성 100%)와 함께.`},
+{"id":`111-1-10eco`,"exam":`111회`,"edu":1,"no":10,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":5,"diff":`중`,"title":`ISO/TR 16218(Chemical Recovery)에 제시된 5가지의 화학적 회수방법에 대하여 제목을 쓰시오.`,"intro":`ISO/TR 16218은 포장 폐기물의 화학적 회수(Chemical Recovery) 방법을 정의한 국제 기술 보고서로, 물리적 재활용으로 처리하기 어려운 복합 소재의 자원 회수 대안을 제시한다.`,"bodies":[{"title":`5가지 화학적 회수 방법`,"content":``,"table":{"headers":[`방법`,`원리`,`회수물`,`적용 소재`],"rows":[[`①열분해 (Pyrolysis)`,`무산소 고온(300~900℃) 분해`,`오일·왁스·가스 (연료용)`,`혼합 플라스틱, PE, PP`],[`②가스화 (Gasification)`,`고온 부분 산화 → 합성가스 생성`,`수소(H₂) + CO (합성가스)`,`모든 유기 포장재`],[`③수소화 분해 (Hydrocracking)`,`수소 분위기 고압·고온 처리`,`나프타·연료유 (원료 회수)`,`PE, PP 등 폴리올레핀`],[`④가용매분해 (Solvolysis)`,`글리콜·알코올 등 용매로 분해`,`모노머 회수 (원료화)`,`PET, PC, NY`],[`⑤에너지 회수 (Energy Recovery)`,`소각열을 전기·열에너지로 전환`,`전력·스팀`,`복합 포장재 최후 수단`]]}},{"title":`물리적 재활용 vs 화학적 회수 비교`,"content":``,"keyPoints":[{"icon":`♻️`,"text":`<b>물리적 재활용</b>: 세척·분쇄·용융 → 펠렛 제조 (단일 소재 적합, 복합재 불가)`},{"type":`g`,"icon":`⚗️`,"text":`<b>화학적 회수</b>: 복합·오염 포장재도 처리 가능 → 물리적 재활용 한계 보완`},{"type":`a`,"icon":`📊`,"text":`<b>우선순위</b>: EU에서 물리적 재활용 > 화학적 회수 > 에너지 회수 순으로 우선 적용 권장`}]}],"conclusion":`ISO/TR 16218의 5가지 화학적 회수는 열분해·가스화·수소화분해·가용매분해·에너지회수이며, 복합 포장재의 물리적 재활용 한계를 보완하는 기술이다. 최근 PET 화학적 재활용(가용매분해)이 식품용 rPET 생산에 주목받고 있다.`,"suggestion":`① 5가지 명칭 순서 암기. ② 가용매분해(Solvolysis)가 PET rPET 생산 핵심 기술 → 132회 4교시-6번(열분해)과 연계. ③ EU PPWR에서 화학적 재활용 인정 여부 최신 동향 확인.`},
+{"id":`120-1-12`,"exam":`120회`,"edu":1,"no":12,"cat1":`종이·골판지 포장`,"cat2":`골판지 상자 설계`,"freq":11,"diff":`중`,"title":`친환경 차원으로 많이 사용되는 골판지의 압축강도 강화 방법에 대하여 설명하시오.`,"intro":`친환경 포장 트렌드로 플라스틱 대체 소재로서 골판지 수요가 급증하고 있다. 그러나 단순히 플라스틱을 골판지로 대체하면 강도 부족 문제가 발생하므로, 환경성을 유지하면서 강도를 향상시키는 방법이 중요하다.`,"bodies":[{"title":`골판지 압축강도 강화 방법 4가지`,"content":``,"table":{"headers":[`방법`,`원리`,`효과`,`친환경성`],"rows":[[`원지 강도(ECT) 향상`,`고강도 원지(KA, K라이너) 적용`,`BCT 직접 향상`,`재활용 가능`],[`방수·내습 처리`,`실리콘계 또는 왁스 코팅→흡습 방지`,`습도 열화율 감소(35%→10% 이하)`,`재활용성 저하 가능→수용성 코팅 개발 중`],[`골 구조 최적화`,`DW(이중양면)·AB골 조합, 최적 골조율`,`강도 30~50% 향상`,`원지 추가 사용`],[`지력증강제 처리`,`PAE(폴리아미드에피클로로히드린) 등 첨가`,`습윤 강도 2~3배 향상`,`생분해성 지력증강제 개발 중`]]}},{"title":`친환경 강화 처리 방법 비교`,"content":``,"keyPoints":[{"icon":`💧`,"text":`<b>수용성 코팅</b>: 수용성 아크릴·전분계 코팅 → 재활용 가능, 내습성 개선 (기존 왁스 대체)`},{"type":`g`,"icon":`🌿`,"text":`<b>나노셀룰로오스</b>: 셀룰로오스 나노피브릴(CNF) 적용 → 강도 20~40% 향상 + 완전 생분해`},{"type":`a`,"icon":`🔬`,"text":`<b>섬유 배향 최적화</b>: 원지 CD 방향을 상자 수직 방향으로 → BCT 최대화`}]}],"conclusion":`골판지 압축강도 강화는 원지 등급 향상, 내습 코팅, 골 구조 최적화, 지력증강제의 4가지 방법을 조합하여 달성한다. 친환경성 측면에서는 재활용 가능한 수용성 코팅과 나노셀룰로오스 기술이 주목받고 있다.`,"suggestion":`① 기존 왁스 코팅 → 수용성 코팅 전환이 친환경 트렌드. ② 지력증강제(Dry Strength Agent)와 습윤강화제(Wet Strength Agent) 구분. ③ 재활용 등급과의 연계: 왁스 코팅 시 재활용 어려움.`},
+{"id":`123-2-1eco`,"exam":`123회`,"edu":2,"no":1,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`식품 포장분야에 적용하고 있는 친환경 포장기법에 대하여 설명하시오.`,"intro":`식품 포장에서의 친환경 포장기법은 환경 부하 최소화와 식품 보호 기능을 동시에 만족하는 포장 방식이다. 소재 혁신, 포장 구조 최적화, 사용 후 자원 순환까지 전 과정을 포괄한다.`,"bodies":[{"title":`친환경 포장기법 7가지`,"content":``,"table":{"headers":[`기법`,`내용`,`적용 사례`],"rows":[[`경량화 (Light-weighting)`,`최소 두께·중량으로 필요 물성 확보`,`PET병 중량 15g→12g, 박형 캔`],[`단일 소재화 (Mono-material)`,`재활용 용이성 위해 동일 소재만 사용`,`All-PE 복합필름, All-PP 용기`],[`바이오 기반 소재`,`재생 가능 원료 사용 (PLA, 사탕수수 PE)`,`PLA 컵·트레이, 바이오PE 봉투`],[`재생 원료(PCR) 사용`,`사용 후 소비자 회수 소재(rPET, rPP)`,`rPET 30~100% 음료병`],[`충진율 최적화`,`포장공간비율 최소화, 과대포장 방지`,`포장공간비율 15% 이하`],[`리필·재사용 포장`,`반복 사용 가능한 내구성 포장`,`리필 스탠드, 다회용 용기`],[`생분해성 포장`,`사용 후 자연 분해 (산업 퇴비)`,`PLA·PHA 신선식품 포장`]]}},{"title":`최근 트렌드 - 단일소재화(Mono-material) 상세`,"content":``,"keyPoints":[{"icon":`🎞️`,"text":`<b>All-PE 복합필름</b>: OPP/PE/CPP 구조 → BOPE/PE/LLDPE로 전환 (PE만으로 차단·인쇄·실링 구현)`},{"type":`g`,"icon":`🏺`,"text":`<b>All-PP 용기</b>: 용기·뚜껑·라벨 모두 PP → 재활용 용이성 최우수 등급`},{"type":`a`,"icon":`📊`,"text":`<b>EU PPWR 2030</b>: 모든 포장 재활용 가능화 → 단일소재화가 핵심 전략`}]}],"conclusion":`식품 포장 친환경기법은 경량화·단일소재화·바이오소재·PCR·충진율최적화·재사용·생분해의 7가지로 구분된다. 최근 EU PPWR과 국내 순환경제법 강화로 단일소재화와 재생원료 사용이 핵심 과제로 부상하고 있다.`,"suggestion":`① 단일소재화(Mono-material)가 최근 가장 중요한 트렌드. ② rPET 함량 의무화 규정(EU PPWR): 2030년 30%, 2040년 65%. ③ 포장공간비율 = (포장용적 - 내용물 체적) / 포장용적 × 100.`},
+{"id":`123-1-3eco`,"exam":`123회`,"edu":1,"no":3,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`생분해성 고분자인 PLA(Polylactic Acid)와 PHA(Polyhydroxy Alkanoate) 각각의 원료 물질에 대하여 설명하시오.`,"intro":`PLA와 PHA는 생분해성 플라스틱의 대표 소재로, 석유계 원료 대신 재생 가능한 바이오매스에서 유래한다는 공통점이 있으나 원료 물질과 생산 방식이 근본적으로 다르다.`,"bodies":[{"title":`PLA vs PHA 원료 물질 비교`,"content":``,"table":{"headers":[`항목`,`PLA (폴리락트산)`,`PHA (폴리히드록시알카노에이트)`],"rows":[[`원료 (바이오매스)`,`옥수수·사탕수수·카사바 전분`,`식물성 오일·포도당·유기산 (탄소원)`],[`생산 방식`,`화학적 합성 (발효+중합)`,`미생물 직접 합성 (세포 내 축적)`],[`핵심 중간체`,`젖산(Lactic Acid) → 락티드`,`아세틸-CoA → 4탄소~8탄소 모노머`],[`생산 균주`,`불필요 (화학 공정)`,`Cupriavidus necator 등 특정 세균`],[`분해 조건`,`산업 퇴비(58℃+)`,`토양·해양·담수 (자연 환경 분해 가능)`],[`단가`,`PHA보다 저렴 (상업화 규모)`,`매우 고가 (미생물 발효 비용)`]]}},{"title":`각 소재 특성 및 포장 적용`,"content":``,"keyPoints":[{"icon":`🌽`,"text":`<b>PLA 특징</b>: 투명, Tg 60℃(내열 한계), 산업 퇴비에서만 분해, 컵·트레이·필름·스트로에 상용화`},{"type":`g`,"icon":`🦠`,"text":`<b>PHA 특징</b>: 미생물 세포 안에 에너지 저장 물질로 축적, 해양 분해 가능(차별화 포인트), 고가`},{"type":`a`,"icon":`🌊`,"text":`<b>해양 분해</b>: PHA만 해양 온도(15~25℃)에서 분해 가능 → 해양 플라스틱 오염 솔루션으로 주목`}]}],"conclusion":`PLA는 옥수수 전분의 화학적 합성으로, PHA는 미생물의 탄소원 발효에 의한 세포 내 축적으로 생산된다. PHA는 해양 분해가 가능한 유일한 생분해 플라스틱으로, 고가임에도 불구하고 해양 오염 대응 소재로 주목받고 있다.`,"suggestion":`① PLA=화학 합성, PHA=미생물 합성 → 핵심 차이. ② PHA 해양 분해 가능(유일) → 차별화 포인트 강조. ③ 108회 분해성 플라스틱 3종 분류와 연계.`},
+{"id":`129-2-3`,"exam":`129회`,"edu":2,"no":3,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`포장재 재활용 용이성 등급평가 기준(환경부고시 제2022-44호) 중에는 페트(PET)병 포장재의 재질·구조 세부기준이 있다. 페트병 포장재를 재활용이 용이한 재질·구조와 재활용이 어려운 재질·구조로 나누고, 페트병의 몸체, 라벨, 마개 및 잡자재를 각각 구분하여 설명하시오.`,"intro":`환경부 고시 제2022-44호의 PET병 재활용 용이성 등급평가는 몸체·라벨·마개·잡자재의 4개 부위별로 재질과 구조를 평가하여 재활용 최우수·우수·보통·어려움 등급을 결정한다.`,"bodies":[{"title":`PET병 부위별 재활용 용이성 기준`,"content":``,"table":{"headers":[`부위`,`재활용 용이 (최우수/우수)`,`재활용 어려움`],"rows":[[`몸체 (Body)`,`무색·투명 PET, 착색 미처리, PETG 혼용 없음`,`착색 PET, PVC 혼용, 다층(PET/알루미늄 등)`],[`라벨 (Label)`,`수분산형 접착제, 열수축 PET 라벨(슬리브), 라벨 없음`,`PVC 수축 라벨, 강접착 OPS/PP 라벨`],[`마개 (Cap)`,`PP 단일 소재, HDPE 단일 소재, 테더드 캡 연결`,`금속 마개, 다소재 복합 마개`],[`잡자재`,`없음 또는 최소화 (금속 없음)`,`금속 핸들, 금속 클립, PVC 재질`]]}},{"title":`재활용 최우수 달성 설계 원칙`,"content":``,"keyPoints":[{"icon":`✅`,"text":`<b>무색 투명 PET 몸체</b>: 착색 없이 원재료 순도 유지 → 고품질 rPET 생산 가능`},{"type":`g`,"icon":`🏷️`,"text":`<b>수분산 접착제 라벨</b>: 세척 공정에서 라벨 자동 분리 → PET 오염 최소화`},{"type":`a`,"icon":`🔗`,"text":`<b>테더드 캡 (Tethered Cap)</b>: EU PPWR 의무 + 캡 분리 폐기 방지 → 재활용률 향상`}]}],"conclusion":`PET병 재활용 최우수 등급은 무색 투명 몸체, 수분산 접착제 라벨, PP/HDPE 단일 마개, 잡자재 없음의 4가지 조건을 동시에 충족해야 한다. 설계 단계에서 이 기준을 반영한 포장 개발이 EPR 분담금 절감과 환경 규제 대응의 핵심이다.`,"suggestion":`① 재활용 등급 4단계: 최우수→우수→보통→어려움. ② PVC 수축 라벨은 재활용 어려움 등급 → PE/PET 슬리브로 전환. ③ EU PPWR 테더드 캡 의무화와 연계.`},
+{"id":`132-2-6`,"exam":`132회`,"edu":2,"no":6,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`바이오 플라스틱 포장재를 산화생분해 플라스틱(Oxo-Biodegradable Plastics), 생분해 플라스틱(Biodegradable Plastics), 바이오베이스 플라스틱(Bio Based Plastics)으로 구분하여 설명하시오.`,"intro":`바이오 플라스틱(Bio Plastics)은 석유계 플라스틱을 대체하는 친환경 소재를 통칭하나, 세 가지 하위 범주(산화생분해·생분해·바이오베이스)는 원료·분해 메커니즘·환경성이 근본적으로 다르다. 명확한 구분이 친환경 포장 설계의 첫 단계이다.`,"bodies":[{"title":`바이오 플라스틱 3종 체계적 비교`,"content":``,"table":{"headers":[`구분`,`정의`,`원료`,`분해 메커니즘`,`분해 결과`,`규제 동향`],"rows":[[`산화생분해
+(Oxo-Biodegradable)`,`산화제 첨가 일반 플라스틱
+(PE, PP + 산화촉진제)`,`석유계 (화석연료)`,`UV·열로 산화분해
+→ 저분자량 파편화`,`미세 플라스틱 잔류`,`EU 2021년 시장 판매 금지
+(SUP Directive)`],[`생분해
+(Biodegradable)`,`미생물에 의해
+완전 분해 가능한 플라스틱`,`바이오매스 또는 석유계`,`미생물 → CO₂+H₂O`,`완전 분해 (조건 충족 시)`,`EN 13432, ASTM D6400
+인증 요건 충족 시 허용`],[`바이오베이스
+(Bio Based)`,`재생 가능 자원으로
+만든 플라스틱`,`식물성 바이오매스`,`생분해 여부 무관
+(소재에 따라 다름)`,`재생원료 사용만 인증`,`ASTM D6866
+바이오매스 함량 인증`]]}},{"title":`3종 관계도 및 핵심 구분`,"content":``,"keyPoints":[{"icon":`⚠️`,"text":`<b>핵심 오해 방지</b>: 바이오베이스 ≠ 생분해. 사탕수수 PE는 바이오베이스이지만 생분해 불가`},{"type":`g`,"icon":`✅`,"text":`<b>생분해 + 바이오베이스 동시 달성</b>: PLA, PHA → 원료도 재생가능 + 미생물 분해 가능`},{"type":`a`,"icon":`🚫`,"text":`<b>산화생분해 사용 금지</b>: EU SUP 지침(2021)으로 단일시장 금지 → 국내 사용 주의`}]}],"conclusion":`산화생분해(미세플라스틱 문제, EU 금지), 생분해(완전 분해이나 퇴비 조건 필요), 바이오베이스(재생 원료이나 생분해와 별개)의 3종은 근본적으로 다르다. 포장 설계 시 이 3종의 차이를 정확히 이해하고 적절한 인증 기준을 적용해야 한다.`,"suggestion":`① 바이오베이스 ≠ 생분해 반드시 구분. ② 산화생분해 = 미세플라스틱 원인 → EU 금지 언급. ③ 108회 3교시-5번 분해성 플라스틱과 연계 학습.`},
+{"id":`132-2-5`,"exam":`132회`,"edu":2,"no":5,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`근래 기업경영의 중요한 지표가 되고 있는 ESG에서 환경경영을 향상시킬 수 있는 물류의 역할에 대하여 2가지만 설명하시오.`,"intro":`ESG(Environmental·Social·Governance)는 기업 지속가능성 평가의 핵심 지표로, 포장·물류 분야에서도 E(환경) 성과가 기업 가치에 직접 영향을 미친다. 물류는 기업 탄소 배출의 15~25%를 차지하는 핵심 영역이다.`,"bodies":[{"title":`물류가 환경경영에 기여하는 2가지 역할`,"content":``,"keyPoints":[{"icon":`🌿`,"text":`<b>① 탄소 발자국 감소</b>: 물류 최적화(수송 거리 단축, 적재율 향상, 친환경 운송 수단 전환)로 CO₂ 배출 감소 → 탄소중립 목표 기여
+- 포장 경량화 → 수송 중량 감소 → 연료 소비·CO₂ 감소
+- 팔레트 적재 효율화 → 차량 운행 횟수 감소
+- 전기 화물차·수소트럭 전환 → 배출 제로화`},{"type":`g`,"icon":`♻️`,"text":`<b>② 포장 폐기물 감소</b>: 물류 포장재 최적화(과대포장 금지), 재사용 포장 시스템(RTS) 도입, 회수 물류(역물류) 강화로 폐기물 발생 억제
+- FFP 인증 포장 도입 → 불필요한 포장재 제거
+- 다회용 배송 박스(에코박스) 시스템 구축
+- 포장재 회수·재활용률 향상 → EPR 의무 초과 달성`}]},{"title":`물류 ESG 성과 측정 지표`,"content":``,"table":{"headers":[`ESG 항목`,`물류 측정 지표`],"rows":[[`탄소 배출`,`톤-km당 CO₂ 배출량, 친환경 차량 비율`],[`포장 폐기물`,`포장재 재활용률, 포장공간비율, 1회용 포장재 사용량`],[`에너지 효율`,`물류 센터 에너지 소비량(kWh/m²), 재생에너지 사용 비율`]]}}],"conclusion":`물류는 탄소 배출 감소(수송 최적화·친환경 차량)와 포장 폐기물 감소(최적화·재사용·역물류)의 2가지 경로로 ESG 환경경영에 직접 기여한다. 이는 기업의 탄소중립 목표와 EPR 의무 이행에도 연결된다.`,"suggestion":`① ESG = Environmental·Social·Governance 풀어서 서술. ② 포장과 물류의 ESG 연계 포인트: 경량화→수송 탄소↓. ③ 최근 출제 급증 주제 → 필수 학습.`},
+{"id":`132-4-6`,"exam":`132회`,"edu":4,"no":6,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`사용 후 플라스틱 포장재의 화학적 재활용 방법 중 열분해에 대하여 설명하시오.`,"intro":`열분해(Pyrolysis)는 플라스틱을 산소가 없는 고온 환경에서 열적으로 분해하여 오일·가스·차르(Char)를 회수하는 화학적 재활용 방법이다. 오염된 복합 포장재도 처리할 수 있어 물리적 재활용의 한계를 보완한다.`,"bodies":[{"title":`열분해 공정 원리 및 단계`,"content":``,"flow":[`폐플라스틱 수거·전처리`,`파쇄·건조 (수분 5% 이하)`,`열분해 반응기 투입 (350~700℃, 무산소)`,`기체 상태 분자 발생`,`냉각·응축 (열분해유 회수)`,`가스 분리 (연료가스)`,`열분해유 정제 (납사·경유급)`]},{"title":`열분해 특성 및 생성물`,"content":``,"table":{"headers":[`항목`,`내용`],"rows":[[`반응 온도`,`350~700℃ (소재에 따라 다름)`],[`주요 생성물`,`열분해유(오일) 40~60% + 가스 20~30% + 차르(고체) 10~20%`],[`적용 소재`,`PE, PP, PS, 혼합 플라스틱 (PET, PVC 제외)`],[`열분해유 용도`,`정제 후 나프타 공급원(올레핀 원료) 또는 연료유`],[`CO₂ 감축`,`소각 대비 70~80% CO₂ 감소`]]}}],"conclusion":`열분해는 오염·복합 플라스틱 폐기물을 열분해유로 전환하여 원료화하는 화학적 재활용 기술이다. 물리적 재활용이 불가능한 혼합·오염 폐플라스틱의 순환경제 편입 경로로 주목받고 있으며, EU·국내 모두 화학적 재활용 범위에 포함하는 방향으로 제도화 중이다.`,"suggestion":`① 열분해 온도(350~700℃)와 가스화(>1000℃) 온도 비교. ② PVC 투입 금지: 염소 발생 → 설비 부식. ③ ISO/TR 16218 화학적 회수 5종 중 하나.`},
+{"id":`135-2-2eco`,"exam":`135회`,"edu":2,"no":2,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`포장폐기물 발생억제를 위한 국내 친환경 포장 정책(자원의 절약과 재활용 촉진에 관한 법률 등)에서는 효과적인 시행을 위해 3R(Reduce, Reuse, Recycle) 원칙을 기준으로 각각 다양한 세부 시행 제도들을 마련하고 있다. 이러한 여러 운영제도(규정)들 중 각 원칙별로 2가지씩만 기재하고 해당 내용을 간단히 설명하시오.`,"intro":`국내 포장 폐기물 정책은 자원순환기본법·자원절약재활용법·순환경제사회법을 근거로 3R(Reduce·Reuse·Recycle) 원칙에 따른 세부 운영 제도를 시행하고 있다.`,"bodies":[{"title":`3R 원칙별 국내 운영 제도 (각 2가지)`,"content":``,"table":{"headers":[`원칙`,`제도 명칭`,`주요 내용`],"rows":[[`Reduce
+(감량)`,`① 포장 횟수·재질 기준`,`1차 포장(내용물 직접 포장) 기준 포장 횟수·소재 규제
+→ 합성수지 포장재 2회 이내, 포장공간비율 기준 이하`],[`Reduce
+(감량)`,`② 포장공간비율 기준
+(KS T 1303)`,`상품 종류별 적정 포장공간비율 설정
+→ 음식료품 15%, 의약품 20%, 건강기능식품 25%, 완구 35% 이하`],[`Reuse
+(재사용)`,`③ 빈용기보증금제도`,`음료·주류 유리병 반환 시 보증금 환급
+→ 맥주병 130원, 소주병 100원 (소비자 반납 유도)`],[`Reuse
+(재사용)`,`④ 다회용기 사용 권고
+및 의무화`,`카페·음식점 다회용 컵 사용, 일회용 컵 제한
+→ 카페 내 일회용컵 사용 금지`],[`Recycle
+(재활용)`,`⑤ EPR
+생산자책임재활용제도`,`제조·수입자의 포장재 재활용 의무량 부과
+→ 미이행 시 재활용부과금 납부`],[`Recycle
+(재활용)`,`⑥ 재활용 용이성
+등급 표시제`,`포장재 재활용 용이성 4등급(최우수~어려움) 표시 의무
+→ 등급에 따라 EPR 분담금 차등 적용`]]}},{"title":`포장공간비율 계산 공식`,"content":``,"formula":{"title":`포장공간비율 (KS T 1303)`,"items":[`포장공간비율(%) = [(포장용적 - 내용물 체적) / 포장용적] × 100`,``,`포장용적: 포장 외치수로 산출한 부피`,`내용물 체적: 내용물의 실제 부피`],"note":`※ 제품 종류별 허용 기준: 음식료품 15%, 의약품 20%, 선물세트 25%, 완구 35% 이하`}}],"conclusion":`국내 3R 포장 정책은 Reduce(포장 횟수·공간비율 규제), Reuse(보증금제·다회용기), Recycle(EPR·재활용 등급)의 3축으로 운영된다. 포장 엔지니어는 6가지 제도를 숙지하고 설계 단계부터 각 기준을 충족해야 한다.`,"suggestion":`① 포장공간비율 종류별 기준값 암기 필수. ② 빈용기보증금 금액(맥주 130원, 소주 100원). ③ 순환경제사회법(135회 3교시-3번)과 연계하여 전체 법체계 이해.`},
+{"id":`135-1-13eco`,"exam":`135회`,"edu":1,"no":13,"cat1":`친환경·법규`,"cat2":`포장 관련 법규`,"freq":6,"diff":`중`,"title":`'자원의 절약과 재활용촉진에 관한 법률'에 따른 '포장재 재활용 용이성 등급평가 기준'에서는 아홉 가지 포장재에 대하여 포장재별 재질·색상·무게 및 재활용의 용이성 평가를 위한 재활용 용이성 등급 평가 기준을 제시하고 있는데, 그 중에서 '재활용 최우수' 등급을 가질 수 있는 포장재 두 가지를 쓰시오.`,"intro":`환경부 고시 재활용 용이성 등급평가에서 '재활용 최우수' 등급은 포장재 9가지 중 재활용 공정에서 이물질·오염 없이 고품질 재생 원료로 회수 가능한 경우에만 부여된다.`,"bodies":[{"title":`재활용 최우수 등급 달성 가능 포장재 2가지`,"content":``,"keyPoints":[{"icon":`🥤`,"text":`<b>① 무색 투명 PET병 (단일 소재)</b>: 무색 투명 PET 몸체 + 수분산 접착제 라벨 + PP/HDPE 캡 조합 → 고품질 rPET 재생 가능`},{"type":`g`,"icon":`📦`,"text":`<b>② 종이 포장재 (단층 원지, 코팅 없음)</b>: 합성수지 코팅 없는 순수 종이 포장재 → 제지 공정에서 완전 재생 가능`}]},{"title":`재활용 최우수 등급 달성 조건`,"content":``,"table":{"headers":[`포장재`,`핵심 조건`],"rows":[[`PET병`,`무색 투명 PET + 수분산 라벨 + PP/HDPE 캡 + 잡자재 없음`],[`종이 포장재`,`합성수지 코팅 없음 + 금속 불포함 + 습식 분리 용이`],[`유리병 (우수)`,`무색 투명 유리 + 수용성 접착제 라벨`],[`알루미늄 캔 (우수)`,`단일 알루미늄 + 도장 최소화`]]}}],"conclusion":`재활용 최우수 등급은 무색 투명 PET병과 코팅 없는 종이 포장재가 대표적이다. EPR 분담금 최저 수준을 달성하기 위해 설계 단계에서 재활용 최우수 등급을 목표로 소재·구조·라벨·마개를 동시에 최적화해야 한다.`,"suggestion":`① '최우수' 등급은 9가지 포장재 중 일부만 해당 → 구체적 소재 조합이 중요. ② PET병의 착색 여부가 등급을 결정하는 핵심 요소. ③ 환경부 고시 최신 개정 내용 확인 권장.`},
+{"id":`138-4-6eco`,"exam":`138회`,"edu":4,"no":6,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":8,"diff":`중`,"title":`친환경 포장설계에서 재활용 가능성(recyclability)과 재활용 효율성(recycling efficiency)의 차이를 설명하고, 이를 고려한 합리적인 포장설계 방향을 설명하시오.`,"intro":`재활용 가능성과 재활용 효율성은 친환경 포장 설계에서 혼용되는 개념이나 근본적으로 다르다. 규제(EU PPWR, 국내 재활용 등급)에서도 두 개념을 구분하여 적용하므로 명확한 이해가 필요하다.`,"bodies":[{"title":`재활용 가능성 vs 재활용 효율성 비교`,"content":``,"table":{"headers":[`항목`,`재활용 가능성 (Recyclability)`,`재활용 효율성 (Recycling Efficiency)`],"rows":[[`정의`,`기술적으로 재활용이 가능한 상태`,`실제 재활용 공정에서 달성되는 효율`],[`평가 기준`,`소재·구조·이물질 기준으로 재활용 가능 여부`,`분리 수거율 × 선별 효율 × 실제 재활용율의 곱`],[`예시`,`단일 소재 PET병 = 재활용 가능`,`수거율 50% × 선별 80% × 처리율 90% = 36% 효율`],[`한계`,`기술적 가능성만 판단 (수거·처리 인프라 무관)`,`인프라·소비자 행동·오염 등 현실 요소 반영`],[`규제 적용`,`EU PPWR Recyclability 기준, 환경부 등급`,`실제 재활용률 목표값 설정`]]}},{"title":`합리적인 포장설계 방향`,"content":``,"keyPoints":[{"icon":`①`,"text":`<b>재활용 가능성 확보</b>: 단일 소재화, 유해물질 배제, 분리 용이 라벨·마개 설계 → 기술적 재활용 가능성 100% 목표`},{"type":`g`,"icon":`②`,"text":`<b>재활용 효율성 향상</b>: 소비자 분리배출 편의성 향상 (라벨 제거 불필요), 색상 제거로 선별 정확도↑`},{"type":`a`,"icon":`③`,"text":`<b>설계 동시 최적화</b>: 재활용 가능성(소재 선택) + 효율성(수거·선별 고려 구조) 두 기준 동시 만족`},{"icon":`④`,"text":`<b>PCR 사용으로 수요 창출</b>: rPET·rPP 사용 → 재활용 소재 시장 형성 → 재활용 시스템 강화`}]}],"conclusion":`재활용 가능성은 기술적 조건이고, 재활용 효율성은 실제 수거~처리까지의 현실 성과이다. 합리적 포장 설계는 두 지표를 동시에 최적화해야 하며, 단일 소재화·색상 제거·PCR 사용이 핵심 전략이다.`,"suggestion":`① EU PPWR 2030 재활용 가능성 100% 목표 언급. ② 재활용 가능성↑ ≠ 재활용률↑ → 인프라·소비자 행동이 효율성 결정. ③ 138회 2교시-6번 PPWR과 연계.`},
+{"id":`138-4-2eco`,"exam":`138회`,"edu":4,"no":2,"cat1":`친환경·법규`,"cat2":`포장 관련 법규`,"freq":6,"diff":`중`,"title":`배달 음식의 플라스틱 용기 등 포장재료 중 내분비계 장애 물질(EDCs, Endocrine Disrupting Chemicals)의 대표적인 물질과 폐해에 대응하는 재료의 변경 동향을 설명하시오.`,"intro":`내분비계 장애물질(EDCs, Endocrine Disrupting Chemicals, 환경호르몬)은 극미량으로도 인체 호르몬 시스템을 교란하는 화학물질로, 식품 포장재에서 식품으로 이행될 경우 심각한 건강 위해를 유발한다.`,"bodies":[{"title":`포장재의 대표적 EDCs`,"content":``,"table":{"headers":[`물질명`,`포장재 사용처`,`건강 영향`,`규제 현황`],"rows":[[`BPA (비스페놀A)`,`금속캔 내면 에폭시 도료, PC 컵`,`성호르몬 교란, 유아 발달 장애`,`EU·미국: 식품접촉 PC 금지, 영아용 금지`],[`프탈레이트류 (DEHP 등)`,`PVC 포장재, 랩, 인쇄 잉크 가소제`,`생식기능 장애, 성조숙증`,`EU REACH 규정: 완구·식품접촉 규제`],[`PFAS (과불화화합물)`,`방수·내기름성 포장 코팅`,`간 독성, 발암 의심, 환경 잔류`,`EU 2026년 식품접촉재료 금지 예정`],[`스티렌 모노머`,`EPS(발포 폴리스티렌) 용기`,`신경 독성, 발암 의심`,`일본·EU 이행 기준 강화`]]}},{"title":`EDCs 대응 재료 변경 트렌드`,"content":``,"keyPoints":[{"icon":`🔄`,"text":`<b>BPA-free 전환</b>: 에폭시 내면 도료 → 폴리에스테르계·아크릴계 Non-BPA 도료. PC 컵 → Tritan(공중합에스터) 또는 PP로 전환`},{"type":`g`,"icon":`🔄`,"text":`<b>PVC 제거</b>: PVC 랩·포장재 → PE·PP·PET 소재로 전환. 연질 PVC(가소제 함유) → 생산 단계 대체 소재`},{"type":`a`,"icon":`🔄`,"text":`<b>PFAS-free 코팅</b>: 방수 식품 포장 코팅 → 실리콘계·식물 유래 왁스 코팅으로 전환`}]}],"conclusion":`BPA·프탈레이트·PFAS·스티렌이 포장재의 주요 EDCs이며, EU·미국의 강력한 규제를 받고 있다. 국내 포장 업계도 BPA-free 도료, PVC 대체, PFAS-free 코팅으로의 전환이 필수 과제이다.`,"suggestion":`① BPA(비스페놀A): 금속캔 내면도료의 핵심 이슈 → 114회 4교시-4번과 연계. ② PFAS는 최근 글로벌 핵심 규제 이슈 → 최신 동향 숙지. ③ 배달 용기 PP/PET 전환 트렌드.`},
+{"id":`132-3-6eco`,"exam":`132회`,"edu":3,"no":6,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":5,"diff":`중`,"title":`종이 포장재(종이팩 포장재 제외)의 재활용 용이성 평가 방법을 UL(Underwriters Laboratories) ECVP 2485를 중심으로 설명하시오.`,"intro":`UL ECVP(Environmental Claim Validation Program) 2485는 종이 포장재의 재활용 가능성을 국제적으로 인증하는 제3자 검증 프로그램이다. 국내 환경부 재활용 용이성 등급과 달리, 실제 제지 공장의 재활용 공정 기반으로 평가한다.`,"bodies":[{"title":`UL ECVP 2485 평가 기준`,"content":``,"table":{"headers":[`평가 항목`,`내용`,`기준`],"rows":[[`해리성 (Defiberization)`,`물에서 섬유 분리 용이성`,`95% 이상 해리`],[`이물질 분리`,`비섬유 소재(코팅·라미) 분리 가능성`,`이물질 잔류율 0.5% 이하`],[`섬유 품질`,`재생 섬유의 품질(강도, 순도)`,`원섬유 대비 80% 이상`],[`코팅·라미 영향`,`합성수지 코팅이 재활용에 미치는 영향`,`친수성 코팅은 허용, 소수성(왁스) 제한`]]}},{"title":`종이 포장재 재활용 설계 원칙`,"content":``,"keyPoints":[{"icon":`✅`,"text":`<b>허용 코팅</b>: 수용성 아크릴·전분계 코팅 → 물에서 분리 가능 → 재활용 가능`},{"type":`r`,"icon":`❌`,"text":`<b>제한 코팅</b>: PE 라미네이트, 왁스 코팅 → 물에서 분리 불가 → 재활용 어려움 등급`},{"type":`a`,"icon":`💡`,"text":`<b>대안</b>: 수용성 차단 코팅(수분산 아크릴계) → 내수성 확보 + 재활용 가능 동시 달성`}]}],"conclusion":`UL ECVP 2485는 해리성·이물질 분리·섬유 품질·코팅 영향의 4기준으로 종이 포장재 재활용 가능성을 평가한다. 종이 포장재 설계 시 수용성 코팅 사용이 재활용성과 기능성을 동시에 만족하는 핵심 전략이다.`,"suggestion":`① UL 2485와 국내 환경부 재활용 등급 비교. ② 종이+PE 라미 → 재활용 어려움 등급 → 수용성 코팅 전환 트렌드. ③ 친환경 포장 인증 체계: UL, FSC, PEFC 등.`},
+{"id":`extra-mono`,"exam":`최신 트렌드`,"edu":0,"no":0,"cat1":`친환경·법규`,"cat2":`친환경 포장설계`,"freq":9,"diff":`중`,"title":`[핵심 트렌드] 단일 소재화(Mono-material) 포장 설계의 개념, 추진 배경, 구현 방법 및 한계를 설명하시오.`,"intro":`단일 소재화(Mono-material Packaging)는 복합 소재로 구성된 기존 복합필름·다층 용기를 단일 종류의 소재만으로 설계하여 재활용 용이성을 극대화하는 트렌드이다. EU PPWR 2030 재활용 가능 포장 100% 목표의 핵심 전략이다.`,"bodies":[{"title":`단일소재화 추진 배경`,"content":``,"keyPoints":[{"icon":`📜`,"text":`<b>규제 압박</b>: EU PPWR 2030년 모든 포장 재활용 가능화 → 복합 소재는 재활용 어려움 등급`},{"type":`r`,"icon":`⚠️`,"text":`<b>복합 소재의 한계</b>: OPP/Al/PE 복합필름 → 소재 분리 불가 → 재활용 불가 → 소각·매립`},{"type":`g`,"icon":`📈`,"text":`<b>시장 요구</b>: 대형 유통사(아마존·월마트) 포장 친환경성 요구 강화`}]},{"title":`단일소재화 구현 방법`,"content":``,"table":{"headers":[`기존 구조`,`단일소재 대안`,`기술 과제`],"rows":[[`OPP/PE/AL/CPP 4층`,`All-PE (BOPE/MDPE/LLDPE)`,`차단성 → EVOH 넣으면 다소재. SiOx 증착으로 대안`],[`PET/NY/AL/CPP`,`All-PET (BOPET/APET) + SiOx`,`높은 원가, 내열성 한계`],[`PP 용기 + PET 라벨`,`PP 용기 + PP 라벨 (In-Mold)`,`라벨 접착 공정 변경`],[`PET병 + PVC 슬리브`,`PET병 + PET 슬리브`,`PET 슬리브 비용↑`]]}},{"title":`단일소재화의 현실적 한계`,"content":``,"keyPoints":[{"icon":`⚠️`,"text":`<b>차단성 타협</b>: 복합필름 대비 O₂·수분 차단성 저하 가능 → SiOx·AlOx 증착으로 보완`},{"type":`g`,"icon":`💰`,"text":`<b>원가 상승</b>: 단일소재 고성능 필름은 복합 대비 10~30% 고가`},{"type":`a`,"icon":`🔧`,"text":`<b>성형성</b>: 단일소재 시 기계적 특성(강성·인장) 저하 → 두께 증가로 보완`}]}],"conclusion":`단일소재화는 재활용 가능성을 높이는 핵심 전략이나 차단성·원가·성형성의 3가지 기술적 과제가 남아 있다. SiOx·AlOx 투명 증착 기술 발전으로 차단성 문제가 해소되면서 All-PE·All-PET 필름의 상용화가 가속화되고 있다.`,"suggestion":`① All-PE vs All-PET 필름: 실링온도·투명성 차이. ② SiOx 증착 투명 차단층이 단일소재화 핵심 기술. ③ EU PPWR 2030 목표와 연계.`},
+];
+
+// ── 데이터 ──
+const FREQ=[
+ {l:"골판지 상자설계",c:11,col:"#1a4fad",cat2:"골판지 상자 설계"},
+ {l:"완충포장 설계",c:11,col:"#2e86de",cat2:"완충포장 설계"},
+ {l:"복합필름·라미네이션",c:10,col:"#0d7377",cat2:"복합필름 라미네이션"},
+ {l:"플라스틱 소재 특성",c:9,col:"#14a085",cat2:"플라스틱 소재 특성"},
+ {l:"MA포장·가스치환",c:9,col:"#1a7a4a",cat2:"MA포장·가스치환"},
+ {l:"금속캔 종류·구조",c:9,col:"#f0a500",cat2:"금속캔 종류·구조"},
+ {l:"친환경 포장설계",c:8,col:"#27ae60",cat2:"친환경 포장설계"},
+ {l:"유리병 제조공정",c:7,col:"#2980b9",cat2:"유리병 제조공정"},
+ {l:"수송포장 시험",c:7,col:"#8e44ad",cat2:"수송포장 시험"},
+ {l:"스마트·지능형 포장",c:6,col:"#c0392b",cat2:"스마트·지능형 포장"},
+ {l:"포장 관련 법규",c:6,col:"#d35400",cat2:"포장 관련 법규"},
+ {l:"포장기계 종류",c:6,col:"#16a085",cat2:"포장기계 종류"},
+];
+const CATS=[
+ {icon:"📦",name:"종이·골판지 포장",color:"navy",sub:"종이·판지·골판지·상자설계",totalQ:28,tags:["ECT·BCT","안전계수","골조율","코러게이터"],subs:["골판지 상자 설계","코러게이터 공정"]},
+ {icon:"🛡️",name:"완충·수송포장",color:"blue",sub:"완충설계·수송시험·물류",totalQ:26,tags:["손상경계이론","완충곡선","G값","진동시험"],subs:["완충포장 설계","수송포장 시험"]},
+ {icon:"🎞️",name:"플라스틱·복합필름",color:"teal",sub:"소재·성형·라미네이션·필름",totalQ:32,tags:["OPP·CPP","EVOH","드라이라미","연신"],subs:["플라스틱 소재 특성","복합필름 라미네이션","플라스틱 성형"]},
+ {icon:"🥫",name:"금속·유리 용기",color:"gold",sub:"금속캔·유리병·알루미늄",totalQ:20,tags:["2피스·3피스","이중권체","TFS","B&B vs P&B"],subs:["금속캔 종류·구조","유리병 제조공정"]},
+ {icon:"🌿",name:"식품·기능성 포장",color:"green",sub:"MA포장·무균·레토르트·스마트",totalQ:28,tags:["가스치환","레토르트","Active","Intelligent"],subs:["MA포장·가스치환","스마트·지능형 포장"]},
+ {icon:"♻️",name:"친환경·법규",color:"red",sub:"LCA·EPR·법규·생분해·재활용",totalQ:24,tags:["LCA","EPR","생분해","PPWR"],subs:["친환경 포장설계","포장 관련 법규"]},
+ {icon:"🚛",name:"물류·SCM",color:"navy",sub:"물류시스템·파렛트·E-commerce",totalQ:16,tags:["SCM","콜드체인","FFP","파렛트"],subs:["물류 시스템","파렛트·물류"]},
+ {icon:"⚙️",name:"포장기계·충전",color:"blue",sub:"포장기계·충전기·자동화",totalQ:14,tags:["VFFS·HFFS","오거충전","아세틱","포장설계"],subs:["포장기계 종류","충전기 종류"]},
+];
+
+// ── 렌더링 유틸 ──
+function mkTbl(t){
+ return `<div class="st-wrap"><table class="st"><thead><tr>${t.headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${t.rows.map(r=>`<tr>${r.map(c=>`<td>${String(c).replace(/\n/g,'<br>')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+function mkFm(f){
+ return `<div class="fm"><div class="ft">${f.title}</div>${f.items.map(i=>i===''?'<br>':i.startsWith('※')||i.startsWith('  ')||i.startsWith('단계')||i.startsWith('Step')||i.startsWith('m₁')||i.startsWith('m₂')||i.startsWith('W')||i.startsWith('Z')||i.startsWith('σ')||i.startsWith('면적')||i.startsWith('합계')||i.startsWith('→')||i.startsWith('∴')||i.startsWith('결과')||i.startsWith('소계')||i.startsWith('k')?`<div class="fn">${i}</div>`:`<div class="fi">${i}</div>`).join('')}${f.note?`<br><div class="fn">${f.note}</div>`:''}</div>`;
+}
+function mkKps(kps){
+ return `<div class="kps">${kps.map(k=>`<div class="kp ${k.type||''}"><span class="ki">${k.icon}</span><div class="kt">${k.text}</div></div>`).join('')}</div>`;
+}
+function mkFlow(arr){
+ const cols=['#1a4fad','#0d7377','#14a085','#f0a500','#1a4fad','#0d7377','#14a085','#f0a500','#6c3483','#c0392b'];
+ return `<div class="dg"><div class="dg-t">PROCESS FLOW</div><div class="flow">${arr.map((f,i)=>`<div class="fb" style="background:${cols[i%10]}">${f}</div>${i<arr.length-1?'<div class="fa">→</div>':''}`).join('')}</div></div>`;
+}
+function bodyHtml(b,cls){
+ return `<div class="ss ${cls}">
+  <div class="ss-hd"><span class="sbg">${cls==='intro'?'서 론':cls==='concl'?'결 론':cls==='sug'?'제 언':'본 론'}</span>${b.title.replace(/본론\s*[IVX0-9]+\s*[:：]\s*/,'')}</div>
+  <div class="ss-body">
+   ${b.content?`<p class="sp">${b.content}</p>`:''}
+   ${b.table?mkTbl(b.table):''}
+   ${b.formula?mkFm(b.formula):''}
+   ${b.keyPoints?mkKps(b.keyPoints):''}
+   ${b.flow?mkFlow(b.flow):''}
+  </div></div>`;
+}
+
+// ── 렌더링 ──
+function renderFreqBars(){
+ const max=11;
+ ['fb1','fb2'].forEach((id,idx)=>{
+  const arr=FREQ.slice(idx*6,(idx+1)*6);
+  document.getElementById(id).innerHTML=arr.map(d=>`
+   <div class="br" onclick="filterByCat2('${d.cat2}')">
+    <div class="bl">${d.l}</div>
+    <div class="bt"><div class="bf" style="width:0%;background:${d.col}" data-w="${d.c/max*100}"></div></div>
+    <div class="bc2" style="color:${d.col}">${d.c}</div>
+   </div>`).join('');
+ });
+ setTimeout(()=>document.querySelectorAll('.bf').forEach(b=>b.style.width=b.dataset.w+'%'),100);
+}
+function renderCatGrid(id){
+ document.getElementById(id).innerHTML=CATS.map(c=>`
+  <div class="cc ${c.color}" onclick="filterByCat1('${c.name}')">
+   <div class="cci">${c.icon}</div>
+   <div class="ccn">${c.name}</div>
+   <div class="ccs">${c.sub}</div>
+   <div class="cct">${c.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div>
+   <div class="ccst">
+    <div class="csi"><div class="v">${c.totalQ}</div><div class="l">총 문제</div></div>
+    <div class="csi"><div class="v">${QS.filter(q=>q.cat1===c.name).length}</div><div class="l">풀이</div></div>
+   </div>
+  </div>`).join('');
+}
+function renderSbCats(){
+ document.getElementById('sb-cats').innerHTML=CATS.map(c=>{
+  const subs=[...new Set(QS.filter(q=>q.cat1===c.name).map(q=>q.cat2))];
+  return `<div class="cat-g">
+   <div class="cat-h" onclick="toggleCat(this)"><span><span class="ci">${c.icon}</span>${c.name}</span><span class="ar">▶</span></div>
+   <div class="sub-ls">${subs.map(s=>`<div class="sub-i" onclick="filterByCat2('${s}');closeSb()">${s}<span class="fr">${QS.filter(q=>q.cat2===s).length}문</span></div>`).join('')}</div>
+  </div>`;
+ }).join('');
+}
+function renderQList(qs,title){
+ document.getElementById('ql-title').textContent=title||'전체 기출문제';
+ document.getElementById('ql-cnt').textContent=`${qs.length}문제`;
+ document.getElementById('ql').innerHTML=qs.length?qs.map(q=>`
+  <div class="qi" onclick="openSol('${q.id}')">
+   <div class="qn">${q.exam} ${q.edu>0?q.edu+'교시-'+q.no+'번':''}</div>
+   <div class="qb">
+    <div class="qt">${q.title.length>85?q.title.slice(0,85)+'…':q.title}</div>
+    <div class="qm">
+     <span class="mt ex">${q.exam}</span>
+     <span class="mt ca">${q.cat2}</span>
+     <span class="mt fq">${'★'.repeat(Math.min(5,Math.round(q.freq/11*5)))} ${q.freq}회</span>
+     <span class="mt df">${q.diff}</span>
+    </div>
+   </div>
+   <div class="qa">›</div>
+  </div>`).join('')
+ :'<div style="padding:40px;text-align:center;color:var(--text3);font-size:14px;">해당 분류 풀이 준비 중</div>';
+}
+function renderFreqTable(){
+ const exams=['108','111','114','117','120','123','126','129','132','135','138'];
+ const topics=FREQ.slice(0,6).map(d=>d.l);
+ const P={"골판지 상자설계":[1,1,1,1,1,1,1,1,1,1,1],"완충포장 설계":[1,1,1,1,1,1,1,1,1,1,1],"복합필름·라미네이션":[1,1,1,1,1,1,1,0,1,1,1],"플라스틱 소재 특성":[1,1,1,1,0,1,1,1,1,1,1],"MA포장·가스치환":[1,0,1,1,1,1,0,1,1,1,1],"금속캔 종류·구조":[1,1,1,0,1,1,1,1,0,1,1]};
+ document.getElementById('freq-tbl').innerHTML=`<thead><tr><th>주제</th>${exams.map(e=>`<th style="text-align:center;font-size:10px;white-space:nowrap">${e}회</th>`).join('')}<th style="text-align:center">계</th></tr></thead><tbody>${topics.map(t=>`<tr><td style="font-size:11.5px;font-weight:600;white-space:nowrap">${t}</td>${exams.map((_,i)=>`<td style="text-align:center">${P[t][i]?'<span style="color:#27ae60;font-size:14px">●</span>':'<span style="color:#ddd">○</span>'}</td>`).join('')}<td style="text-align:center;font-weight:700;color:var(--sky)">${P[t].reduce((a,b)=>a+b)}</td></tr>`).join('')}</tbody>`;
+}
+
+// ── 풀이 뷰 ──
+const bodyCls=['body1','body2','body3','body4'];
+function openSol(qId){
+ const q=QS.find(x=>x.id===qId);
+ if(!q){alert('준비 중인 풀이입니다.');return;}
+ document.getElementById('sv-meta').innerHTML=`<span class="sbdg ex">${q.exam}${q.edu>0?' '+q.edu+'교시':''}</span><span class="sbdg ca">${q.cat2}</span><span class="sbdg fq">${q.freq}회 출제</span>`;
+ document.getElementById('sv-title').textContent=q.title;
+ const bodies=q.bodies||[];
+ document.getElementById('tp1').innerHTML=
+  bodyHtml({title:'개요 및 중요성',content:q.intro},'intro')+
+  bodies.map((b,i)=>bodyHtml(b,bodyCls[i]||'body1')).join('')+
+  bodyHtml({title:'요약 및 핵심 정리',content:q.conclusion},'concl')+
+  bodyHtml({title:'추가 학습 포인트 & 시험 전략',content:(q.suggestion||'').replace(/([①②③④⑤⑥])/g,'<br>$1')},'sug');
+ const t2=document.getElementById('tp2');
+ const hasTbl=bodies.some(b=>b.table),hasFm=bodies.some(b=>b.formula),hasFlow=bodies.some(b=>b.flow);
+ t2.innerHTML=hasTbl||hasFm||hasFlow
+  ? bodies.filter(b=>b.table||b.formula||b.flow).map((b,i)=>bodyHtml(b,bodyCls[i]||'body1')).join('')
+  : '<div style="padding:40px;text-align:center;color:var(--text3);font-size:14px;">논술 중심 문제입니다.<br>모범답안 탭을 참고하세요.</div>';
+ document.getElementById('ai-msgs').innerHTML=`<div class="ai-msg"><span class="mi">🤖</span><div class="mb"><b>${q.cat2}</b> 관련 문제입니다.<br>궁금한 점을 질문해 주세요!<br><br>예) "이 개념 쉽게 설명해줘" / "시험 답안 핵심 포인트는?"</div></div>`;
+ document.querySelectorAll('.sv-tab').forEach((t,i)=>t.classList.toggle('on',i===0));
+ document.querySelectorAll('.sv-panel').forEach((p,i)=>p.classList.toggle('on',i===0));
+ document.getElementById('sv').classList.add('on');
+ document.getElementById('sv').scrollTop=0;
+ window._cq=q;
+}
+function closeSol(){
+ document.getElementById('sv').classList.remove('on');
+}
+function swTab(el,pid){
+ document.querySelectorAll('.sv-tab').forEach(t=>t.classList.remove('on'));
+ document.querySelectorAll('.sv-panel').forEach(p=>p.classList.remove('on'));
+ el.classList.add('on');
+ document.getElementById(pid).classList.add('on');
+}
+
+// ── 네비게이션 ──
+const LABELS={dash:'🏠 대시보드',browse:'📚 분류 탐색',qlist:'📝 기출문제',freq:'📊 빈도 분석'};
+function showView(v,sbEl){
+ document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+ const el=document.getElementById('view-'+v);
+ if(el)el.classList.add('on');
+ document.querySelectorAll('.sb-item').forEach(e=>e.classList.remove('on'));
+ if(sbEl)sbEl.classList.add('on');
+ else document.querySelectorAll('.sb-item').forEach(e=>{if(e.dataset.view===v)e.classList.add('on');});
+ document.getElementById('hd-title').textContent=LABELS[v]||'📦 포장기술사';
+ if(v==='qlist')renderQList(QS,'전체 기출문제');
+ closeSb();
+}
+function filterByCat1(cat1){
+ const qs=QS.filter(q=>q.cat1===cat1);
+ renderQList(qs,cat1);
+ document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+ document.getElementById('view-qlist').classList.add('on');
+ document.getElementById('hd-title').textContent=cat1;
+ setBot('qlist');
+}
+function filterByCat2(cat2){
+ const qs=QS.filter(q=>q.cat2===cat2);
+ renderQList(qs,cat2);
+ document.querySelectorAll('.view').forEach(e=>e.classList.remove('on'));
+ document.getElementById('view-qlist').classList.add('on');
+ document.getElementById('hd-title').textContent=cat2;
+ setBot('qlist');
+ closeSb();
+}
+function randomQ(){const q=QS[Math.floor(Math.random()*QS.length)];openSol(q.id);}
+function toggleCat(el){el.classList.toggle('op');el.nextElementSibling.classList.toggle('op');}
+
+// ── 사이드바 (모바일) ──
+function toggleSb(){
+ const sb=document.getElementById('sb');
+ const ov=document.getElementById('overlay');
+ if(sb.classList.contains('open')){closeSb();}
+ else{sb.classList.add('open');ov.classList.add('on');document.body.style.overflow='hidden';}
+}
+function closeSb(){
+ document.getElementById('sb').classList.remove('open');
+ document.getElementById('overlay').classList.remove('on');
+ document.body.style.overflow='';
+}
+
+// ── 하단 네비 (모바일) ──
+function setBot(v){
+ document.querySelectorAll('.bn').forEach(b=>b.classList.remove('on'));
+ const el=document.getElementById('bn-'+v);
+ if(el)el.classList.add('on');
+}
+
+// ── AI ──
+async function sendAI(){
+ const ta=document.getElementById('ai-ta');
+ const msg=ta.value.trim();if(!msg)return;
+ const msgs=document.getElementById('ai-msgs');
+ msgs.innerHTML+=`<div class="ai-msg u"><span class="mi">👤</span><div class="mb">${msg}</div></div>`;
+ ta.value='';ta.style.height='auto';
+ msgs.innerHTML+=`<div class="ai-msg" id="tkg"><span class="mi">🤖</span><div class="mb"><div class="tkg"><span></span><span></span><span></span></div></div></div>`;
+ msgs.scrollTop=msgs.scrollHeight;
+ const q=window._cq;
+ const ctx=q?`포장기술사 기출: "${q.title.slice(0,60)}" / ${q.cat2}`:'포장기술사';
+ try{
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+   method:"POST",headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,
+    system:`포장기술사 시험 전문 강사. ${ctx}. 핵심만 간결하게, 중요 용어는 영문 병기. 한국어 답변.`,
+    messages:[{role:"user",content:msg}]})
+  });
+  const d=await r.json();
+  const ans=d.content?.[0]?.text||"응답 오류";
+  document.getElementById('tkg')?.remove();
+  msgs.innerHTML+=`<div class="ai-msg"><span class="mi">🤖</span><div class="mb">${ans.replace(/\n/g,'<br>')}</div></div>`;
+ }catch(e){
+  document.getElementById('tkg')?.remove();
+  msgs.innerHTML+=`<div class="ai-msg"><span class="mi">🤖</span><div class="mb">연결 오류. 잠시 후 다시 시도해 주세요.</div></div>`;
+ }
+ msgs.scrollTop=msgs.scrollHeight;
+}
+
+// ── 초기화 ──
+function _init(){
+ document.getElementById('s1').textContent=QS.length;
+ document.getElementById('s4').textContent=QS.length;
+ document.getElementById('total-cnt').textContent=QS.length;
+ const pct=Math.round(QS.length/152*100);
+ document.getElementById('pg-pct').textContent=pct+'%';
+ document.getElementById('pg-fill').style.width=pct+'%';
+ renderFreqBars();
+ renderCatGrid('cg-dash');
+ renderCatGrid('cg-browse');
+ renderSbCats();
+ renderQList(QS,'전체 기출문제');
+ renderFreqTable();
+
+ // 텍스트에어리어 자동 높이
+ const ta=document.getElementById('ai-ta');
+ ta.addEventListener('input',()=>{ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,120)+'px';});
+ ta.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAI();}});
+
+ // 풀이 뷰 스와이프 닫기 (모바일)
+ let tsx=0;
+ const sv=document.getElementById('sv');
+ sv.addEventListener('touchstart',e=>{tsx=e.touches[0].clientX;},{passive:true});
+ sv.addEventListener('touchend',e=>{
+  if(e.changedTouches[0].clientX-tsx>80 && tsx<60)closeSol();
+ },{passive:true});
+};
+// 초기화
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',_init);
+}else{
+  _init();
+}
+
+</script>
+</body>
+</html>
